@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nabore Sales">
     <link rel="manifest" href="manifest.json">
-    <title>Nabore Bookshop · Modern Graphs · PWA</title>
+    <title>Nabore Bookshop sale report</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
@@ -221,7 +221,7 @@
 
 <!-- LOGIN CONTAINER -->
 <div id="loginContainer" class="login-card">
-    <h2>🔐 Nabore Bookshop</h2>
+    <h2>🔐 Nabore Bookshop sales </h2>
     <p style="color: #475569; margin-bottom: 1rem;">Sign in to manage sales</p>
     <input type="email" id="loginEmail" placeholder="Email address" autocomplete="email">
     <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
@@ -256,10 +256,10 @@
                 <input type="file" id="imageInput" accept="image/*" capture="environment">
                 <div id="imagePreviewArea" style="margin-top: 0.5rem;"></div>
             </div>
-            <div class="input-group"><button id="saveNewBtn" class="btn-success">➕ Save as New</button></div>
+            <div class="input-group"><button id="saveNewBtn" class="btn-success">➕ Save New</button></div>
             <div class="input-group"><button id="updateExistingBtn" class="btn-warning">✏️ Update Existing</button></div>
         </div>
-        <p style="font-size: 0.7rem; color: #5b6e8c; margin-top: 1rem;">⚠️ "Save as New" will overwrite if date exists. "Update" works only for existing records. One record per date.</p>
+        <p style="font-size: 0.7rem; color: #5b6e8c; margin-top: 1rem;">⚠️ "Save New" will overwrite if date exists. "Update" works only for existing records. One record per date.</p>
     </div>
 
     <!-- Filters & Export -->
@@ -293,7 +293,7 @@
             <tbody id="tableBody"><td><td colspan="7" style="text-align:center;">Loading sales data...</td></tr></tbody>
          </table>
     </div>
-    <footer style="text-align: center; font-size: 0.7rem; margin-top: 2rem; color: #6c86a3;">🔐 Firebase Auth • Real-time sync • One record per date • Modern graphs</footer>
+    <footer style="text-align: center; font-size: 0.7rem; margin-top: 2rem; color: #6c86a3;">🔐 @ Nabore 2026, Build by Saewua, Hosted on Github </footer>
 </div>
 </div>
 
