@@ -8,8 +8,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nabore Sales">
     <link rel="manifest" href="manifest.json">
-    <title>Nabore Bookshop · PWA · KES · Image Capture</title>
-    <!-- Chart.js & SheetJS (XLSX) -->
+    <title>Nabore Bookshop · PWA · KES · Edit Only</title>
+    <!-- Chart.js & SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
@@ -60,7 +60,7 @@
             color: #4169E1;
         }
 
-        /* Dashboard cards - responsive grid */
+        /* Dashboard cards - responsive */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -92,7 +92,7 @@
             color: #5f7f9e;
         }
 
-        /* Charts wrapper - responsive stacking */
+        /* Charts wrapper */
         .charts-wrapper {
             display: grid;
             grid-template-columns: 1fr;
@@ -129,7 +129,7 @@
             width: 100%;
         }
 
-        /* Entry Form - fully responsive */
+        /* Entry Form */
         .entry-card {
             background: white;
             border-radius: 24px;
@@ -220,11 +220,14 @@
             border: 1.5px solid #4169E1;
             color: #4169E1;
         }
-        .danger-btn {
-            background: #b91c1c;
+        .btn-edit {
+            background: #2b5e3b;
+        }
+        .btn-edit:hover {
+            background: #1f4529;
         }
 
-        /* Table - horizontal scroll for small screens */
+        /* Table */
         .table-wrapper {
             background: white;
             border-radius: 24px;
@@ -259,16 +262,15 @@
             gap: 8px;
             flex-wrap: wrap;
         }
-        .edit-btn, .delete-btn {
-            background: none;
+        .edit-btn {
+            background: #eef3ff;
+            color: #4169E1;
             border: none;
             font-size: 0.8rem;
             cursor: pointer;
             padding: 4px 10px;
             border-radius: 30px;
         }
-        .edit-btn { background: #eef3ff; color: #4169E1; }
-        .delete-btn { background: #fee2e2; color: #b91c1c; }
         footer {
             text-align: center;
             font-size: 0.65rem;
@@ -286,10 +288,10 @@
 <div class="app-container">
     <div class="shop-header">
         <h1>📸 Nabore Bookshop · Sales + Image Capture</h1>
-        <div class="badge-pwa">PWA · KES · Responsive</div>
+        <div class="badge-pwa">PWA · KES · Edit Only</div>
     </div>
 
-    <!-- DATA ENTRY FORM (with camera capture) -->
+    <!-- DATA ENTRY FORM -->
     <div class="entry-card">
         <h3 style="margin-bottom: 14px;">📝 Record daily sales (KES) & attach photo</h3>
         <div class="form-row">
@@ -315,14 +317,16 @@
                 <div class="capture-preview" id="imagePreviewArea"></div>
             </div>
             <div class="input-group">
-                <button id="saveRecordBtn">💾 Save Record</button>
+                <button id="saveRecordBtn">💾 Save / Update</button>
+            </div>
+            <div class="input-group">
+                <button id="editRecordBtn" class="btn-edit">✏️ Edit Record</button>
             </div>
         </div>
         <div class="action-buttons">
             <button id="excelExportBtn" class="btn-outline">📎 Download Excel</button>
-            <button id="clearAllBtn" class="danger-btn">⚠️ Reset All Data</button>
         </div>
-        <p style="font-size:0.7rem; margin-top: 10px;">* Take photo or upload image (attached to selected date). All amounts in KES.</p>
+        <p style="font-size:0.7rem; margin-top: 10px;">* Use "Edit Record" to load data for the selected date, then modify and click "Save/Update". Table shows only Edit button.</p>
     </div>
 
     <!-- DASHBOARD -->
@@ -339,22 +343,21 @@
         <div class="chart-card"><h2>📊 Daily Net Profit (Bar) · KES</h2><canvas id="netProfitBarChart"></canvas></div>
     </div>
 
-    <!-- RECORDS TABLE with image thumbnails -->
+    <!-- RECORDS TABLE - Only Edit button, no Delete -->
     <div class="table-wrapper">
         <table id="salesTable">
-            <thead><tr><th>Date</th><th>Services (KES)</th><th>Product (KES)</th><th>Expenses (KES)</th><th>Net (KES)</th><th>Image</th><th>Actions</th></tr></thead>
-            <tbody id="tableBody"><tr><td colspan="7">✨ No records. Use form above to add. ✨</td></tr></tbody>
+            <thead><tr><th>Date</th><th>Services (KES)</th><th>Product (KES)</th><th>Expenses (KES)</th><th>Net (KES)</th><th>Image</th><th>Edit</th></thead>
+            <tbody id="tableBody"><tr><td colspan="7">✨ No records. Use form above to add. ✨</tr></tbody>
         </table>
     </div>
-    <footer>⬇️ Install app | Fully responsive | Tap image to view full size | Camera capture works on mobile</footer>
+    <footer>⬇️ Install app | Fully responsive | Tap image to view full size | Edit only (no delete)</footer>
 </div>
 
 <script>
-    const STORAGE_KEY = 'nabore_sales_records_v2'; // new version with images
+    const STORAGE_KEY = 'nabore_sales_records_v2';
     let lineChart = null, barChart = null;
-    let currentImageDataUrl = null; // temporary for unsaved image
+    let currentImageDataUrl = null;
 
-    // Helper
     function formatKES(val) { return `KES ${val.toFixed(2)}`; }
 
     function getRecords() {
@@ -377,9 +380,7 @@
             expenses: parseFloat(expenses)||0, image: imageDataUrl || null
         };
         if (existingIndex !== -1) {
-            // keep existing image if new image not provided? but we pass image from form
             if (imageDataUrl === undefined || imageDataUrl === null) {
-                // if user didn't upload new image, keep old one
                 if (records[existingIndex].image) newRecord.image = records[existingIndex].image;
             }
             records[existingIndex] = newRecord;
@@ -389,16 +390,6 @@
         records.sort((a,b)=>new Date(a.date)-new Date(b.date));
         saveRecords(records);
         return true;
-    }
-
-    function deleteRecordByDate(date) {
-        let records = getRecords();
-        const filtered = records.filter(r => r.date !== date);
-        if (filtered.length !== records.length) { saveRecords(filtered); return true; }
-        return false;
-    }
-    function clearAllData() {
-        if(confirm("⚠️ Delete ALL sales records and images? Cannot undo.")) { saveRecords([]); refreshUI(); }
     }
 
     function updateDashboard(records) {
@@ -420,20 +411,20 @@
             const imgHtml = rec.image ? `<img src="${rec.image}" class="table-img" onclick="window.open('${rec.image}','_blank')" style="cursor:pointer;" title="Tap to view">` : '<span style="color:#aaa;">—</span>';
             html+=`<tr>
                 <td>${rec.date}</td>
-                <td>${formatKES(rec.services)}</td><td>${formatKES(rec.product)}</td><td>${formatKES(rec.expenses)}</td>
+                <td>${formatKES(rec.services)}</td>
+                <td>${formatKES(rec.product)}</td>
+                <td>${formatKES(rec.expenses)}</td>
                 <td>${formatKES(net)}</td>
                 <td>${imgHtml}</td>
-                <td class="action-icons">
-                    <button class="edit-btn" data-date="${rec.date}">✏️ Edit</button>
-                    <button class="delete-btn" data-date="${rec.date}">🗑️ Del</button>
-                </td>
+                <td><button class="edit-btn" data-date="${rec.date}">✏️ Edit</button></td>
             </tr>`;
         });
         tbody.innerHTML = html;
+        // Only edit button event listeners
         document.querySelectorAll('.edit-btn').forEach(btn=>btn.addEventListener('click',()=>editRecordByDate(btn.dataset.date)));
-        document.querySelectorAll('.delete-btn').forEach(btn=>btn.addEventListener('click',()=>{ if(confirm(`Delete ${btn.dataset.date}?`)) deleteRecordByDate(btn.dataset.date); refreshUI(); }));
     }
 
+    // Load record into form
     function editRecordByDate(date) {
         const records = getRecords();
         const rec = records.find(r=>r.date===date);
@@ -442,7 +433,6 @@
             document.getElementById('servicesInput').value = rec.services;
             document.getElementById('productInput').value = rec.product;
             document.getElementById('expensesInput').value = rec.expenses;
-            // show existing image preview
             const previewDiv = document.getElementById('imagePreviewArea');
             if(rec.image){
                 previewDiv.innerHTML = `<img src="${rec.image}" style="width:60px;height:60px;border-radius:12px;"><button id="clearTempImageBtn" class="btn-outline" style="padding:4px 8px;">🗑️ Remove</button>`;
@@ -458,10 +448,12 @@
                 document.getElementById('imageInput').value = '';
             }
             document.querySelector('.entry-card').scrollIntoView({behavior:'smooth'});
+        } else {
+            alert(`No record found for ${date}. You can create a new one.`);
         }
     }
 
-    // Chart functions
+    // Charts
     function renderLineChart(records) {
         const ctx = document.getElementById('salesLineChart').getContext('2d');
         const labels = records.map(r=>r.date), servicesData=records.map(r=>r.services), productsData=records.map(r=>r.product), expensesData=records.map(r=>r.expenses);
@@ -520,15 +512,12 @@
         const services = parseFloat(document.getElementById('servicesInput').value)||0;
         const product = parseFloat(document.getElementById('productInput').value)||0;
         const expenses = parseFloat(document.getElementById('expensesInput').value)||0;
-        // capture image from current state (either newly captured or kept)
         const imageToStore = currentImageDataUrl || null;
         addOrUpdateRecord(date, services, product, expenses, imageToStore);
         refreshUI();
-        // reset form numbers but keep date & clear image preview
         document.getElementById('servicesInput').value = 0;
         document.getElementById('productInput').value = 0;
         document.getElementById('expensesInput').value = 0;
-        // clear image preview and stored temp
         currentImageDataUrl = null;
         document.getElementById('imagePreviewArea').innerHTML = '';
         document.getElementById('imageInput').value = '';
@@ -554,16 +543,10 @@
         if(!dateInput.value) dateInput.value = today;
     }
 
-    // Ensure no test data (starts empty)
     function ensureEmptyStart() {
-        if(localStorage.getItem(STORAGE_KEY) === null) {
-            saveRecords([]);
-        } else {
-            // keep existing if any
-        }
+        if(localStorage.getItem(STORAGE_KEY) === null) saveRecords([]);
     }
 
-    // Service Worker Registration
     function registerServiceWorker() {
         if('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').catch(e=>console.log("SW not critical"));
@@ -577,7 +560,11 @@
         refreshUI();
         document.getElementById('saveRecordBtn').addEventListener('click', saveRecordWithImage);
         document.getElementById('excelExportBtn').addEventListener('click', exportToExcel);
-        document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
+        document.getElementById('editRecordBtn').addEventListener('click', () => {
+            const date = document.getElementById('recordDate').value;
+            if(!date) { alert("Please select a date to edit."); return; }
+            editRecordByDate(date);
+        });
         const imageInput = document.getElementById('imageInput');
         imageInput.addEventListener('change', (e) => {
             if(e.target.files && e.target.files[0]) handleImageSelection(e.target.files[0]);
@@ -587,7 +574,7 @@
     });
 </script>
 
-<!-- PWA scaffolding (manifest & service worker pointers) -->
+<!-- PWA manifest scaffolding -->
 <script>
     (function(){
         if(!document.querySelector('link[rel="manifest"]')){
@@ -595,7 +582,7 @@
             link.rel = 'manifest'; link.href = 'manifest.json';
             document.head.appendChild(link);
         }
-        console.log("Responsive PWA with image capture ready");
+        console.log("Responsive PWA with Edit Only (no delete) ready");
     })();
 </script>
 </body>
