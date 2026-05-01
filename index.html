@@ -2,31 +2,393 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nabore Bookshop · Secure Firebase</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <meta name="theme-color" content="#4169E1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nabore Sales">
+    <link rel="manifest" href="manifest.json">
+    <title>Nabore Bookshop · Royal Blue PWA</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
-        /* (same styles as before – omitted for brevity, but use from previous answer) */
-        .error-box { background: #ffe5e5; color: #b00020; padding: 16px; border-radius: 24px; margin: 20px; text-align: center; }
-        button { background: #4169E1; border: none; border-radius: 40px; padding: 10px 20px; color: white; cursor: pointer; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', sans-serif;
+        }
+
+        body {
+            background: #4169E1;  /* Royal blue */
+            color: white;
+            padding: 16px;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Royal blue theme - cards with semi-transparent background */
+        .shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 12px;
+        }
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.3px;
+        }
+        .badge-pwa {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+            padding: 5px 14px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: white;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s;
+        }
+        .card h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 8px;
+        }
+        .card .value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: white;
+            word-break: break-word;
+        }
+        .charts-wrapper {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (min-width: 900px) {
+            .charts-wrapper { grid-template-columns: 1fr 1fr; }
+            h1 { font-size: 1.9rem; }
+            .card .value { font-size: 2rem; }
+            body { padding: 24px; }
+        }
+        .chart-card {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .chart-card h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        canvas {
+            max-height: 280px;
+            width: 100%;
+        }
+        .entry-card {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            padding: 18px;
+            margin-bottom: 28px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            align-items: flex-end;
+        }
+        .input-group {
+            flex: 1 1 160px;
+            min-width: 130px;
+        }
+        .input-group label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.8);
+            display: block;
+            margin-bottom: 4px;
+        }
+        .input-group input, .input-group select, .input-group button {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+            color: #1e2a3e;
+        }
+        .input-group button {
+            background: white;
+            color: #4169E1;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-save { background: #2b5e3b; color: white !important; }
+        .btn-update { background: #dc843a; color: white !important; }
+        .btn-outline { background: transparent; border: 1.5px solid white; color: white !important; }
+        .image-capture-group {
+            flex: 1 1 200px;
+        }
+        .capture-preview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .capture-preview img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.5);
+            background: white;
+        }
+        .action-buttons, .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            align-items: center;
+        }
+        .filter-bar {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+        }
+        .filter-bar span {
+            color: white;
+            font-weight: 600;
+        }
+        .table-wrapper {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 600px;
+            color: white;
+        }
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        th {
+            background: rgba(0,0,0,0.2);
+            color: white;
+        }
+        .table-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid white;
+        }
+        .edit-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 30px;
+        }
+        .status-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: white;
+            margin-left: 12px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2b5e3b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+        footer {
+            text-align: center;
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.7);
+            margin-top: 24px;
+        }
+        .login-container {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            padding: 30px;
+            max-width: 400px;
+            margin: 100px auto;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .login-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 40px;
+            border: none;
+            background: rgba(255,255,255,0.9);
+        }
+        .login-container button {
+            background: white;
+            color: #4169E1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 40px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        @media (max-width: 550px) {
+            .form-row .input-group { flex: 1 1 100%; }
+            .card .value { font-size: 1.3rem; }
+            h1 { font-size: 1.3rem; }
+        }
     </style>
 </head>
 <body>
+
+<!-- Login screen -->
 <div id="loginContainer" class="login-container">
     <h2>🔐 Nabore Bookshop</h2>
-    <div id="authErrorMsg" class="error-box" style="display:none;"></div>
+    <p style="margin: 10px 0;">Secure access required</p>
     <input type="email" id="loginEmail" placeholder="Email">
     <input type="password" id="loginPassword" placeholder="Password">
     <button id="loginBtn">Sign In</button>
     <button id="signupBtn">Create Account</button>
+    <div id="authErrorMsg" style="color: #ffb3b3; font-size: 0.8rem; margin-top: 10px;"></div>
 </div>
-<div id="mainContent" style="display:none;"><!-- main app UI here (same as previous) --></div>
+
+<!-- Main app (hidden until login) -->
+<div id="mainContent" style="display: none;">
+<div class="app-container">
+    <div class="shop-header">
+        <h1>👑 Nabore Bookshop · Royal Blue</h1>
+        <div class="badge-pwa">KES · Secure · Real‑time</div>
+    </div>
+
+    <!-- Entry form -->
+    <div class="entry-card">
+        <h3>📝 Record sales (one per date) <span id="recordStatus" class="status-badge">Ready</span></h3>
+        <div class="form-row">
+            <div class="input-group"><label>📅 Date</label><input type="date" id="recordDate" required></div>
+            <div class="input-group"><label>💼 Services (KES)</label><input type="number" id="servicesInput" step="any" value="0"></div>
+            <div class="input-group"><label>📚 Product (KES)</label><input type="number" id="productInput" step="any" value="0"></div>
+            <div class="input-group"><label>🧾 Expenses (KES)</label><input type="number" id="expensesInput" step="any" value="0"></div>
+            <div class="input-group image-capture-group">
+                <label>📸 Image / Receipt</label>
+                <input type="file" id="imageInput" accept="image/*" capture="environment">
+                <div class="capture-preview" id="imagePreviewArea"></div>
+            </div>
+            <div class="input-group"><button id="saveNewBtn" class="btn-save">➕ Save as New</button></div>
+            <div class="input-group"><button id="updateExistingBtn" class="btn-update">✏️ Update Existing</button></div>
+        </div>
+        <div class="action-buttons">
+            <button id="excelExportBtn" class="btn-outline">📎 Download Excel (filtered)</button>
+        </div>
+        <p style="font-size:0.7rem; margin-top: 10px; opacity:0.8;">✅ "Save as New" overwrites existing date (with warning). "Update" works only if record exists.</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <span>📊 Dashboard Filters:</span>
+        <select id="yearFilter" style="background:white; color:black;"><option value="all">All Years</option></select>
+        <select id="monthFilter" style="background:white; color:black;"><option value="all">All Months</option></select>
+        <select id="weekFilter" style="background:white; color:black;"><option value="all">All Weeks</option></select>
+        <button id="resetFiltersBtn" class="btn-outline">⟳ Reset Filters</button>
+        <button id="logoutMainBtn" class="btn-outline" style="margin-left:auto;">🚪 Logout</button>
+    </div>
+
+    <!-- Dashboard cards -->
+    <div class="dashboard-grid">
+        <div class="card"><h3>📊 Total Services</h3><div class="value" id="totalServices">KES 0.00</div></div>
+        <div class="card"><h3>📦 Total Product</h3><div class="value" id="totalProducts">KES 0.00</div></div>
+        <div class="card"><h3>⚠️ Total Expenses</h3><div class="value" id="totalExpenses">KES 0.00</div></div>
+        <div class="card"><h3>💰 Net Profit</h3><div class="value" id="netProfit">KES 0.00</div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-wrapper">
+        <div class="chart-card"><h2>📈 Daily Trends (Line) · KES</h2><canvas id="salesLineChart"></canvas></div>
+        <div class="chart-card"><h2>📊 Daily Net Profit (Bar) · KES</h2><canvas id="netProfitBarChart"></canvas></div>
+    </div>
+
+    <!-- Records table -->
+    <div class="table-wrapper">
+        <table id="salesTable">
+            <thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th><th>Edit</th></thead>
+            <tbody id="tableBody"><tr><td colspan="7">Loading records...</td></tr></tbody>
+        </table>
+    </div>
+    <footer>🔥 Firebase Auth • Document ID = date • One record per date • Filters affect totals & charts</footer>
+</div>
+</div>
+
+<div id="toast" class="toast">✓ Record saved successfully</div>
 
 <script type="module">
+    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // 🔥 YOUR FIREBASE CONFIG HERE (copy from Console)
+    // 🔥 REPLACE WITH YOUR FIREBASE CONFIG
   const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
@@ -37,62 +399,258 @@
   appId: "1:619207980890:web:c680907f519b3d6efa2563"
 };
 
-    let app, auth, db;
-    try {
-        app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-    } catch(e) {
-        document.getElementById('authErrorMsg').innerText = "Firebase config error: " + e.message;
-        document.getElementById('authErrorMsg').style.display = "block";
-    }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    // Handle auth errors gracefully
-    const loginBtn = document.getElementById('loginBtn');
-    const signupBtn = document.getElementById('signupBtn');
-    const errorDiv = document.getElementById('authErrorMsg');
+    // DOM elements
+    const loginDiv = document.getElementById('loginContainer');
+    const mainDiv = document.getElementById('mainContent');
+    const authError = document.getElementById('authErrorMsg');
 
-    loginBtn.onclick = async () => {
+    let allRecords = [];
+    let lineChart = null, barChart = null;
+    let currentImageDataUrl = null;
+
+    // Helper functions
+    function formatKES(v) { return `KES ${v.toFixed(2)}`; }
+    function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+
+    // Auth state
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loginDiv.style.display = 'none';
+            mainDiv.style.display = 'block';
+            initApp();
+        } else {
+            loginDiv.style.display = 'block';
+            mainDiv.style.display = 'none';
+        }
+    });
+
+    document.getElementById('loginBtn').onclick = async () => {
         const email = document.getElementById('loginEmail').value;
         const pwd = document.getElementById('loginPassword').value;
         try {
             await signInWithEmailAndPassword(auth, email, pwd);
+            authError.innerText = '';
         } catch (err) {
-            if (err.code === 'auth/configuration-not-found') {
-                errorDiv.innerText = "⚠️ Firebase Authentication is not enabled. Go to Firebase Console → Authentication → Enable Email/Password, then refresh.";
-            } else {
-                errorDiv.innerText = err.message;
-            }
-            errorDiv.style.display = "block";
+            if (err.code === 'auth/configuration-not-found') authError.innerText = '⚠️ Enable Email/Password in Firebase Console → Authentication.';
+            else authError.innerText = err.message;
         }
     };
-
-    signupBtn.onclick = async () => {
+    document.getElementById('signupBtn').onclick = async () => {
         const email = document.getElementById('loginEmail').value;
         const pwd = document.getElementById('loginPassword').value;
         try {
             await createUserWithEmailAndPassword(auth, email, pwd);
+            authError.innerText = '';
         } catch (err) {
-            if (err.code === 'auth/configuration-not-found') {
-                errorDiv.innerText = "⚠️ Firebase Authentication is not enabled. Enable Email/Password in Firebase Console first.";
-            } else {
-                errorDiv.innerText = err.message;
-            }
-            errorDiv.style.display = "block";
+            if (err.code === 'auth/configuration-not-found') authError.innerText = '⚠️ Enable Email/Password in Firebase Console first.';
+            else authError.innerText = err.message;
         }
     };
+    document.getElementById('logoutMainBtn')?.addEventListener('click', () => signOut(auth));
 
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-            // The rest of your app logic (charts, sales, etc.) goes here.
-            // Use the same code from the previous secure version.
+    // App logic (identical to previous secure version, with filters and image handling)
+    function getWeekNumber(date) {
+        const d = new Date(date);
+        d.setHours(0,0,0);
+        d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+        const week1 = new Date(d.getFullYear(), 0, 4);
+        return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    }
+
+    let currYear = "all", currMonth = "all", currWeek = "all";
+
+    function getFilteredRecords() {
+        let filtered = [...allRecords];
+        if(currYear !== "all") filtered = filtered.filter(r => r.date.startsWith(currYear));
+        if(currMonth !== "all") filtered = filtered.filter(r => new Date(r.date).getMonth() + 1 === parseInt(currMonth));
+        if(currWeek !== "all") filtered = filtered.filter(r => getWeekNumber(r.date).toString() === currWeek);
+        return filtered;
+    }
+
+    function updateFiltersUI() {
+        const years = [...new Set(allRecords.map(r => r.date.split('-')[0]))].sort();
+        const ySel = document.getElementById('yearFilter');
+        ySel.innerHTML = '<option value="all">All Years</option>';
+        years.forEach(y => ySel.innerHTML += `<option value="${y}">${y}</option>`);
+        ySel.value = currYear;
+        const mSel = document.getElementById('monthFilter');
+        mSel.innerHTML = '<option value="all">All Months</option>';
+        for(let i=1;i<=12;i++) mSel.innerHTML += `<option value="${i}">${i}</option>`;
+        mSel.value = currMonth;
+        const weeks = [...new Set(allRecords.map(r => getWeekNumber(r.date)))].sort((a,b)=>a-b);
+        const wSel = document.getElementById('weekFilter');
+        wSel.innerHTML = '<option value="all">All Weeks</option>';
+        weeks.forEach(w => wSel.innerHTML += `<option value="${w}">Week ${w}</option>`);
+        wSel.value = currWeek;
+    }
+
+    function updateDashboardAndCharts() {
+        const filtered = getFilteredRecords();
+        let totalServices = 0, totalProducts = 0, totalExpenses = 0;
+        filtered.forEach(r => { totalServices += r.services; totalProducts += r.product; totalExpenses += r.expenses; });
+        const netTotal = totalServices + totalProducts - totalExpenses;
+        document.getElementById('totalServices').innerHTML = formatKES(totalServices);
+        document.getElementById('totalProducts').innerHTML = formatKES(totalProducts);
+        document.getElementById('totalExpenses').innerHTML = formatKES(totalExpenses);
+        document.getElementById('netProfit').innerHTML = formatKES(netTotal);
+
+        const labels = filtered.map(r => r.date);
+        const servicesData = filtered.map(r => r.services);
+        const productsData = filtered.map(r => r.product);
+        const expensesData = filtered.map(r => r.expenses);
+        const netData = filtered.map(r => r.services + r.product - r.expenses);
+
+        if(lineChart) lineChart.destroy();
+        if(barChart) barChart.destroy();
+
+        const ctxLine = document.getElementById('salesLineChart').getContext('2d');
+        const ctxBar = document.getElementById('netProfitBarChart').getContext('2d');
+
+        if(labels.length) {
+            lineChart = new Chart(ctxLine, {
+                type: 'line', data: { labels, datasets: [
+                    { label: 'Services (KES)', data: servicesData, borderColor: '#ffffff', backgroundColor: 'rgba(255,255,255,0.1)', tension: 0.2 },
+                    { label: 'Product (KES)', data: productsData, borderColor: '#ffd966', backgroundColor: 'rgba(255,217,102,0.1)', tension: 0.2 },
+                    { label: 'Expenses (KES)', data: expensesData, borderColor: '#ff9f4a', backgroundColor: 'rgba(255,159,74,0.1)', tension: 0.2 }
+                ]}, options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } }, scales: { y: { ticks: { color: 'white' }, title: { display: true, text: 'KES', color: 'white' } }, x: { ticks: { color: 'white' } } } }
+            });
+            barChart = new Chart(ctxBar, {
+                type: 'bar', data: { labels, datasets: [{ label: 'Net Profit (KES)', data: netData, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 8 }] },
+                options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } }, scales: { y: { ticks: { color: 'white' }, title: { display: true, text: 'KES', color: 'white' } }, x: { ticks: { color: 'white' } } } }
+            });
         } else {
-            document.getElementById('loginContainer').style.display = 'block';
-            document.getElementById('mainContent').style.display = 'none';
+            lineChart = new Chart(ctxLine, { type: 'line', data: { labels: ['No data'], datasets: [] } });
+            barChart = new Chart(ctxBar, { type: 'bar', data: { labels: ['No data'], datasets: [] } });
         }
-    });
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        if(!allRecords.length) { tbody.innerHTML = '<tr><td colspan="7">✨ No records. Add above. ✨</td></tr>'; return; }
+        let html = '';
+        allRecords.forEach(rec => {
+            const net = rec.services + rec.product - rec.expenses;
+            const imgHtml = rec.image ? `<img src="${rec.image}" class="table-img" onclick="window.open('${rec.image}','_blank')">` : '—';
+            html += `<tr>
+                        <td>${rec.date}</td>
+                        <td>${formatKES(rec.services)}</td>
+                        <td>${formatKES(rec.product)}</td>
+                        <td>${formatKES(rec.expenses)}</td>
+                        <td>${formatKES(net)}</td>
+                        <td>${imgHtml}</td>
+                        <td><button class="edit-btn" data-date="${rec.date}">✏️ Edit</button></td>
+                     </tr>`;
+        });
+        tbody.innerHTML = html;
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => loadDateForEdit(btn.dataset.date));
+        });
+    }
+
+    async function loadDateForEdit(date) {
+        const docRef = doc(db, "sales", date);
+        const docSnap = await getDoc(docRef);
+        if(docSnap.exists()) {
+            const data = docSnap.data();
+            document.getElementById('recordDate').value = date;
+            document.getElementById('servicesInput').value = data.services || 0;
+            document.getElementById('productInput').value = data.product || 0;
+            document.getElementById('expensesInput').value = data.expenses || 0;
+            const previewDiv = document.getElementById('imagePreviewArea');
+            if(data.image) {
+                previewDiv.innerHTML = `<img src="${data.image}" style="width:60px;height:60px;border-radius:12px;"><button id="clearTempImageBtn" style="background:white;color:#4169E1;border:none;padding:4px 10px;border-radius:30px;">🗑️ Remove</button>`;
+                document.getElementById('clearTempImageBtn')?.addEventListener('click', () => {
+                    previewDiv.innerHTML = '';
+                    currentImageDataUrl = null;
+                    document.getElementById('imageInput').value = '';
+                });
+                currentImageDataUrl = data.image;
+            } else {
+                previewDiv.innerHTML = '';
+                currentImageDataUrl = null;
+                document.getElementById('imageInput').value = '';
+            }
+            document.getElementById('recordStatus').innerText = 'Editing existing';
+        } else {
+            document.getElementById('recordDate').value = date;
+            document.getElementById('servicesInput').value = 0;
+            document.getElementById('productInput').value = 0;
+            document.getElementById('expensesInput').value = 0;
+            document.getElementById('imagePreviewArea').innerHTML = '';
+            currentImageDataUrl = null;
+            document.getElementById('recordStatus').innerText = 'New date - ready';
+        }
+    }
+
+    async function saveNewRecord() {
+        const date = document.getElementById('recordDate').value;
+        if(!date) { alert("Select a date"); return; }
+        const exists = await getDoc(doc(db, "sales", date)).then(s => s.exists());
+        if(exists && !confirm(`Date ${date} already has a record. OVERWRITE?`)) return;
+        const services = parseFloat(document.getElementById('servicesInput').value) || 0;
+        const product = parseFloat(document.getElementById('productInput').value) || 0;
+        const expenses = parseFloat(document.getElementById('expensesInput').value) || 0;
+        await setDoc(doc(db, "sales", date), { date, services, product, expenses, image: currentImageDataUrl || null, updatedAt: new Date().toISOString() });
+        showToast("✓ Saved / overwritten");
+        document.getElementById('recordStatus').innerText = 'Saved!';
+        setTimeout(() => document.getElementById('recordStatus').innerText = 'Ready', 2000);
+    }
+
+    async function updateExisting() {
+        const date = document.getElementById('recordDate').value;
+        if(!date) { alert("Select a date"); return; }
+        const exists = await getDoc(doc(db, "sales", date)).then(s => s.exists());
+        if(!exists) { alert("No record exists. Use Save as New."); return; }
+        const services = parseFloat(document.getElementById('servicesInput').value) || 0;
+        const product = parseFloat(document.getElementById('productInput').value) || 0;
+        const expenses = parseFloat(document.getElementById('expensesInput').value) || 0;
+        await setDoc(doc(db, "sales", date), { date, services, product, expenses, image: currentImageDataUrl || null, updatedAt: new Date().toISOString() }, { merge: true });
+        showToast("✓ Updated");
+        document.getElementById('recordStatus').innerText = 'Updated!';
+        setTimeout(() => document.getElementById('recordStatus').innerText = 'Ready', 2000);
+    }
+
+    function initApp() {
+        const q = query(collection(db, "sales"), orderBy("date", "asc"));
+        onSnapshot(q, (snapshot) => {
+            allRecords = [];
+            snapshot.forEach(docSnap => allRecords.push({ id: docSnap.id, date: docSnap.id, ...docSnap.data() }));
+            updateFiltersUI();
+            renderTable();
+            updateDashboardAndCharts();
+        });
+
+        // Event listeners
+        document.getElementById('saveNewBtn').onclick = saveNewRecord;
+        document.getElementById('updateExistingBtn').onclick = updateExisting;
+        document.getElementById('excelExportBtn').onclick = () => {
+            const filtered = getFilteredRecords();
+            if(!filtered.length) { alert("No data for current filters"); return; }
+            const sheet = [["Date","Services (KES)","Product (KES)","Expenses (KES)","Net Profit (KES)","Has Image"]];
+            filtered.forEach(r => sheet.push([r.date, r.services.toFixed(2), r.product.toFixed(2), r.expenses.toFixed(2), (r.services+r.product-r.expenses).toFixed(2), r.image?"Yes":"No"]));
+            const ws = XLSX.utils.aoa_to_sheet(sheet);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Filtered_Sales");
+            XLSX.writeFile(wb, `Nabore_Sales_${new Date().toISOString().slice(0,19)}.xlsx`);
+        };
+        document.getElementById('resetFiltersBtn').onclick = () => { currYear="all"; currMonth="all"; currWeek="all"; updateFiltersUI(); updateDashboardAndCharts(); };
+        document.getElementById('yearFilter').onchange = (e) => { currYear = e.target.value; updateDashboardAndCharts(); };
+        document.getElementById('monthFilter').onchange = (e) => { currMonth = e.target.value; updateDashboardAndCharts(); };
+        document.getElementById('weekFilter').onchange = (e) => { currWeek = e.target.value; updateDashboardAndCharts(); };
+        document.getElementById('imageInput').onchange = (e) => {
+            if(e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = ev => currentImageDataUrl = ev.target.result;
+                reader.readAsDataURL(e.target.files[0]);
+            } else currentImageDataUrl = null;
+        };
+        document.getElementById('recordDate').valueAsDate = new Date();
+        // load initial date
+        setTimeout(() => loadDateForEdit(document.getElementById('recordDate').value), 500);
+    }
 </script>
 </body>
 </html>
