@@ -3,45 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <meta name="theme-color" content="#FFFFFF">
+    <meta name="theme-color" content="#4169E1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nabore Sales">
     <link rel="manifest" href="manifest.json">
-    <title>Nabore Bookshop · Modern PWA</title>
-    <!-- Chart.js v4.4 & SheetJS -->
+    <title>Nabore Bookshop · Modern Graphs · PWA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <!-- Google Fonts (Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             background: #ffffff;
-            color: #1e44d9;
+            color: #1e293b;
             padding: 1.5rem;
             line-height: 1.5;
         }
-        .app-container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        /* Royal blue accents */
-        .royal-blue-bg {
-            background: #4169E1;
-        }
-        .royal-blue-text {
-            color: #4169E1;
-        }
-        .border-royal {
-            border-color: #4169E1;
-        }
-        /* Cards */
+        .app-container { max-width: 1400px; margin: 0 auto; }
         .card {
             background: #ffffff;
             border-radius: 1.5rem;
@@ -49,19 +29,14 @@
             border: 1px solid #eef2f6;
             transition: all 0.2s ease;
         }
-        .card:hover {
-            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
-        }
-        /* Dashboard grid */
+        .card:hover { box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
-        .stat-card {
-            padding: 1.25rem;
-        }
+        .stat-card { padding: 1.25rem; }
         .stat-card h3 {
             font-size: 0.75rem;
             text-transform: uppercase;
@@ -75,11 +50,7 @@
             font-weight: 800;
             color: #0f2b3d;
         }
-        /* Form */
-        .form-card {
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
+        .form-card { padding: 1.5rem; margin-bottom: 2rem; }
         .form-row {
             display: flex;
             flex-wrap: wrap;
@@ -139,19 +110,10 @@
             background: #eef3ff;
             transform: none;
         }
-        .btn-success {
-            background: #2b5e3b;
-        }
-        .btn-success:hover {
-            background: #1f4529;
-        }
-        .btn-warning {
-            background: #dc843a;
-        }
-        .btn-warning:hover {
-            background: #b96a2a;
-        }
-        /* Filters bar */
+        .btn-success { background: #2b5e3b; }
+        .btn-success:hover { background: #1f4529; }
+        .btn-warning { background: #dc843a; }
+        .btn-warning:hover { background: #b96a2a; }
         .filter-bar {
             background: #f8fafc;
             border-radius: 3rem;
@@ -163,7 +125,6 @@
             gap: 1rem;
             border: 1px solid #eef2f6;
         }
-        /* Table */
         .table-wrapper {
             background: white;
             border-radius: 1.5rem;
@@ -238,10 +199,7 @@
             box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
             border: 1px solid #eef2f6;
         }
-        .login-card h2 {
-            color: #1e3a8a;
-            margin-bottom: 0.5rem;
-        }
+        .login-card h2 { color: #1e3a8a; margin-bottom: 0.5rem; }
         .login-card input {
             width: 100%;
             padding: 0.8rem 1rem;
@@ -249,12 +207,7 @@
             border-radius: 2rem;
             border: 1px solid #e2e8f0;
         }
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .mt-4 { margin-top: 1rem; }
         .mb-2 { margin-bottom: 0.5rem; }
         .gap-2 { gap: 0.5rem; }
@@ -301,7 +254,7 @@
             <div class="input-group">
                 <label>📸 Receipt image</label>
                 <input type="file" id="imageInput" accept="image/*" capture="environment">
-                <div id="imagePreviewArea" class="capture-preview" style="margin-top: 0.5rem;"></div>
+                <div id="imagePreviewArea" style="margin-top: 0.5rem;"></div>
             </div>
             <div class="input-group"><button id="saveNewBtn" class="btn-success">➕ Save as New</button></div>
             <div class="input-group"><button id="updateExistingBtn" class="btn-warning">✏️ Update Existing</button></div>
@@ -327,7 +280,7 @@
         <div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="netProfit">KES 0.00</div></div>
     </div>
 
-    <!-- Charts -->
+    <!-- Charts - Modernized -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
         <div class="card" style="padding: 1rem;"><h3 style="color:#1e3a8a; margin-bottom: 0.75rem;">📈 Daily Trends (Line)</h3><canvas id="salesLineChart" style="max-height: 280px;"></canvas></div>
         <div class="card" style="padding: 1rem;"><h3 style="color:#1e3a8a; margin-bottom: 0.75rem;">📊 Net Profit per Day (Bar)</h3><canvas id="netProfitBarChart" style="max-height: 280px;"></canvas></div>
@@ -337,10 +290,10 @@
     <div class="table-wrapper">
         <table id="salesTable">
             <thead><tr><th>Date</th><th>Services (KES)</th><th>Product (KES)</th><th>Expenses (KES)</th><th>Net (KES)</th><th>Image</th><th>Edit</th></thead>
-            <tbody id="tableBody"><tr><td colspan="7" style="text-align:center;">Loading sales data...</td></tr></tbody>
-        </table>
+            <tbody id="tableBody"><td><td colspan="7" style="text-align:center;">Loading sales data...</td></tr></tbody>
+         </table>
     </div>
-    <footer style="text-align: center; font-size: 0.7rem; margin-top: 2rem; color: #6c86a3;">🔐 Firebase Auth • Real-time sync • One record per date • Data is private and secure</footer>
+    <footer style="text-align: center; font-size: 0.7rem; margin-top: 2rem; color: #6c86a3;">🔐 Firebase Auth • Real-time sync • One record per date • Modern graphs</footer>
 </div>
 </div>
 
@@ -351,8 +304,8 @@
     import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // 🔥 REPLACE WITH YOUR FIREBASE CONFIGURATION (from Firebase Console)
-   const firebaseConfig = {
+    // 🔥 REPLACE WITH YOUR FIREBASE CONFIGURATION
+    const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
   databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
@@ -366,20 +319,17 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // DOM refs
     const loginDiv = document.getElementById('loginContainer');
     const mainDiv = document.getElementById('mainContent');
     const authError = document.getElementById('authErrorMsg');
 
-    let allRecords = [];      // all sales from Firestore
+    let allRecords = [];
     let lineChart = null, barChart = null;
     let currentImageDataUrl = null;
 
-    // Utils
     function formatKES(v) { return `KES ${v.toFixed(2)}`; }
     function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
 
-    // Auth listeners
     onAuthStateChanged(auth, (user) => {
         if (user) {
             loginDiv.style.display = 'none';
@@ -415,7 +365,6 @@
     };
     document.getElementById('logoutMainBtn')?.addEventListener('click', () => signOut(auth));
 
-    // ---------- Sales logic ----------
     function getWeekNumber(dateStr) {
         const d = new Date(dateStr);
         d.setHours(0,0,0);
@@ -474,6 +423,7 @@
         });
     }
 
+    // MODERNIZED CHARTS - Line & Bar with green services, smooth curves, rounded bars, modern tooltips
     function updateDashboardAndCharts() {
         const filtered = getFilteredRecords();
         let totalServices=0, totalProducts=0, totalExpenses=0;
@@ -496,19 +446,154 @@
         const ctxLine = document.getElementById('salesLineChart').getContext('2d');
         const ctxBar = document.getElementById('netProfitBarChart').getContext('2d');
 
+        // Modern Line Chart
         if(labels.length) {
             lineChart = new Chart(ctxLine, {
-                type: 'line', data: { labels, datasets: [
-                    { label: 'Services (KES)', data: servicesData, borderColor: '#4169E1', backgroundColor: 'rgba(65,105,225,0.05)', tension: 0.2, fill: true },
-                    { label: 'Product (KES)', data: productsData, borderColor: '#5a7de0', backgroundColor: 'rgba(90,125,224,0.05)', tension: 0.2, fill: true },
-                    { label: 'Expenses (KES)', data: expensesData, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.05)', tension: 0.2, fill: true }
-                ]}, options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: KES ${ctx.raw.toFixed(2)}` } } } }
+                type: 'line',
+                data: { 
+                    labels, 
+                    datasets: [
+                        { 
+                            label: 'Services (KES)', 
+                            data: servicesData, 
+                            borderColor: '#2ecc71',          // modern green
+                            backgroundColor: 'rgba(46, 204, 113, 0.08)',
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#2ecc71',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        { 
+                            label: 'Product (KES)', 
+                            data: productsData, 
+                            borderColor: '#3498db',          // vibrant blue
+                            backgroundColor: 'rgba(52, 152, 219, 0.08)',
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#3498db',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        { 
+                            label: 'Expenses (KES)', 
+                            data: expensesData, 
+                            borderColor: '#e67e22',          // warm orange
+                            backgroundColor: 'rgba(230, 126, 34, 0.08)',
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#e67e22',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f1f5f9',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#4169E1',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: (ctx) => `${ctx.dataset.label}: KES ${ctx.raw.toFixed(2)}`
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 8,
+                                font: { family: 'Inter, system-ui', size: 12 }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#e9ecef', drawBorder: false },
+                            title: { display: true, text: 'Amount (KES)', font: { weight: '500', size: 12 }, color: '#5b6e8c' },
+                            ticks: { callback: (v) => 'KES ' + v.toFixed(0), color: '#475569' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { maxRotation: 35, autoSkip: true, color: '#475569' }
+                        }
+                    },
+                    elements: {
+                        line: { borderJoin: 'round' },
+                        point: { hoverBorderWidth: 3 }
+                    }
+                }
             });
+
+            // Modern Bar Chart
             barChart = new Chart(ctxBar, {
-                type: 'bar', data: { labels, datasets: [{ label: 'Net Profit (KES)', data: netData, backgroundColor: '#4169E1', borderRadius: 8 }] },
-                options: { responsive: true, maintainAspectRatio: true }
+                type: 'bar',
+                data: { 
+                    labels, 
+                    datasets: [
+                        { 
+                            label: 'Net Profit (KES)', 
+                            data: netData, 
+                            backgroundColor: '#4169E1',      // royal blue
+                            borderRadius: 12,
+                            barPercentage: 0.65,
+                            categoryPercentage: 0.8,
+                            hoverBackgroundColor: '#2b4fc7'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f1f5f9',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#4169E1',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: (ctx) => `KES ${ctx.raw.toFixed(2)}`
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: { usePointStyle: true, font: { family: 'Inter, system-ui', size: 12 } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#e9ecef' },
+                            title: { display: true, text: 'Net Profit (KES)', font: { weight: '500' }, color: '#5b6e8c' },
+                            ticks: { callback: (v) => 'KES ' + v.toFixed(0), color: '#475569' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#475569' }
+                        }
+                    }
+                }
             });
         } else {
+            // empty states
             lineChart = new Chart(ctxLine, { type: 'line', data: { labels: ['No data'], datasets: [] } });
             barChart = new Chart(ctxBar, { type: 'bar', data: { labels: ['No data'], datasets: [] } });
         }
@@ -577,7 +662,6 @@
         setTimeout(()=> document.getElementById('recordStatus').innerText = 'Ready', 2000);
     }
 
-    // File preview
     document.getElementById('imageInput').addEventListener('change', (e) => {
         if(e.target.files && e.target.files[0]) {
             const reader = new FileReader();
@@ -620,7 +704,6 @@
             updateDashboardAndCharts();
         });
 
-        // event binding
         document.getElementById('saveNewBtn').onclick = saveNewRecord;
         document.getElementById('updateExistingBtn').onclick = updateExisting;
         document.getElementById('excelExportBtn').onclick = exportToExcel;
