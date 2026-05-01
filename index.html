@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nabore Sales">
     <link rel="manifest" href="manifest.json">
-    <title>Nabore Bookshop · Split Buttons · Firebase</title>
+    <title>Nabore Bookshop · Dashboard Filters · Firebase</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
@@ -31,16 +31,17 @@
         .form-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
         .input-group { flex: 1 1 160px; min-width: 130px; }
         .input-group label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #4169E1; display: block; margin-bottom: 4px; }
-        .input-group input, .input-group button { width: 100%; padding: 10px 12px; border-radius: 40px; border: 1.5px solid #cddfe6; background: #fefefe; font-size: 0.9rem; }
+        .input-group input, .input-group select, .input-group button { width: 100%; padding: 10px 12px; border-radius: 40px; border: 1.5px solid #cddfe6; background: #fefefe; font-size: 0.9rem; }
         .input-group button { background: #4169E1; color: white; border: none; cursor: pointer; font-weight: 600; }
         .image-capture-group { flex: 1 1 200px; }
         .capture-preview { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
         .capture-preview img { width: 60px; height: 60px; object-fit: cover; border-radius: 12px; border: 1px solid #cddfe6; background: #f8fafc; }
-        .action-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
-        button { background: #4169E1; border: none; color: white; font-weight: 600; padding: 10px 20px; border-radius: 40px; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .action-buttons, .filter-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; align-items: center; }
+        button { background: #4169E1; border: none; color: white; font-weight: 600; padding: 8px 18px; border-radius: 40px; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
         .btn-outline { background: transparent; border: 1.5px solid #4169E1; color: #4169E1; }
         .btn-save { background: #2b5e3b; }
         .btn-update { background: #dc843a; }
+        .filter-select { background: white; }
         .table-wrapper { background: white; border-radius: 24px; overflow-x: auto; margin-bottom: 16px; border: 1px solid #e2edf2; }
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 600px; }
         th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #eef3f6; }
@@ -48,6 +49,8 @@
         .table-img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; cursor: pointer; }
         .edit-btn { background: #eef3ff; color: #4169E1; border: none; font-size: 0.8rem; cursor: pointer; padding: 4px 10px; border-radius: 30px; }
         .status-badge { background: #e9ecef; padding: 4px 12px; border-radius: 30px; font-size: 0.7rem; color: #4169E1; margin-left: 12px; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #2b5e3b; color: white; padding: 12px 24px; border-radius: 40px; font-size: 0.9rem; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; }
         footer { text-align: center; font-size: 0.65rem; color: #6f9eb0; margin-top: 24px; }
         @media (max-width: 550px) { .form-row .input-group { flex: 1 1 100%; } .card .value { font-size: 1.3rem; } h1 { font-size: 1.3rem; } }
     </style>
@@ -55,10 +58,11 @@
 <body>
 <div class="app-container">
     <div class="shop-header">
-        <h1>📅 Nabore Bookshop · Split Buttons</h1>
-        <div class="badge-pwa">KES · Firebase · Create vs Update</div>
+        <h1>📅 Nabore Bookshop · Dashboard Filters</h1>
+        <div class="badge-pwa">KES · Year/Month/Week filters</div>
     </div>
 
+    <!-- Entry form -->
     <div class="entry-card">
         <h3>📝 Record sales (one record per date) <span id="recordStatus" class="status-badge">Ready</span></h3>
         <div class="form-row">
@@ -71,15 +75,25 @@
                 <input type="file" id="imageInput" accept="image/*" capture="environment">
                 <div class="capture-preview" id="imagePreviewArea"></div>
             </div>
-            <div class="input-group"><button id="saveNewBtn" class="btn-save">➕ Save as New Record</button></div>
+            <div class="input-group"><button id="saveNewBtn" class="btn-save">➕ Save as New</button></div>
             <div class="input-group"><button id="updateExistingBtn" class="btn-update">✏️ Update Existing</button></div>
         </div>
         <div class="action-buttons">
-            <button id="excelExportBtn" class="btn-outline">📎 Download Excel</button>
+            <button id="excelExportBtn" class="btn-outline">📎 Download Excel (filtered)</button>
         </div>
-        <p style="font-size:0.7rem; margin-top: 10px;">✅ "Save as New" will overwrite if date exists (with warning). "Update Existing" only works if record exists.</p>
+        <p style="font-size:0.7rem; margin-top: 10px;">✅ "Save as New" overwrites existing date (with warning). "Update" works only if record exists.</p>
     </div>
 
+    <!-- Filter bar -->
+    <div class="filter-bar" style="background: white; border-radius: 40px; padding: 12px 18px; margin-bottom: 20px;">
+        <span style="font-weight: 600; color: #4169E1;">📊 Dashboard Filters:</span>
+        <select id="yearFilter" class="filter-select"><option value="all">All Years</option></select>
+        <select id="monthFilter" class="filter-select"><option value="all">All Months</option></select>
+        <select id="weekFilter" class="filter-select"><option value="all">All Weeks</option></select>
+        <button id="resetFiltersBtn" class="btn-outline">⟳ Reset Filters</button>
+    </div>
+
+    <!-- Dashboard cards (filtered) -->
     <div class="dashboard-grid">
         <div class="card"><h3>📊 Total Services</h3><div class="value" id="totalServices">KES 0.00</div></div>
         <div class="card"><h3>📦 Total Product</h3><div class="value" id="totalProducts">KES 0.00</div></div>
@@ -87,22 +101,26 @@
         <div class="card"><h3>💰 Net Profit</h3><div class="value" id="netProfit">KES 0.00</div></div>
     </div>
 
+    <!-- Charts (filtered) -->
     <div class="charts-wrapper">
         <div class="chart-card"><h2>📈 Daily Trends (Line) · KES</h2><canvas id="salesLineChart"></canvas></div>
         <div class="chart-card"><h2>📊 Daily Net Profit (Bar) · KES</h2><canvas id="netProfitBarChart"></canvas></div>
     </div>
 
+    <!-- Records table (always shows all records, but filters affect above) -->
     <div class="table-wrapper">
         <table id="salesTable">
             <thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th><th>Edit</th></thead>
-            <tbody id="tableBody"><tr><td colspan="7">Loading records...</td></tr></tbody>
+            <tbody id="tableBody"><tr><td colspan="7">Loading records......</td></tr></tbody>
         </table>
     </div>
-    <footer>🔥 Two explicit buttons: Create (overwrites) and Update (only if exists). Document ID = date.</footer>
+    <footer>🔥 Firebase • Filters affect totals & charts only (table shows all records).</footer>
 </div>
 
+<div id="toast" class="toast">✓ Record saved successfully</div>
+
 <script type="module">
-  const firebaseConfig = {
+    const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
   projectId: "nabore-bookshop",
@@ -122,48 +140,86 @@
     
     let lineChart = null, barChart = null;
     let currentImageDataUrl = null;
-    let allRecords = [];
+    let allRecords = [];          // all records from Firestore
+    
+    // Helper: get ISO week number for a date (Monday first)
+    function getWeekNumber(date) {
+        const d = new Date(date);
+        d.setHours(0,0,0,0);
+        d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+        const week1 = new Date(d.getFullYear(), 0, 4);
+        return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    }
     
     function formatKES(v) { return `KES ${v.toFixed(2)}`; }
     
-    function updateUI() {
+    function showSuccessMessage(msg = "Record saved successfully") {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+    
+    // Filter logic
+    let currentYear = "all";
+    let currentMonth = "all";
+    let currentWeek = "all";
+    
+    function getFilteredRecords() {
+        let filtered = [...allRecords];
+        if(currentYear !== "all") {
+            filtered = filtered.filter(r => r.date.startsWith(currentYear));
+        }
+        if(currentMonth !== "all") {
+            filtered = filtered.filter(r => {
+                const month = new Date(r.date).getMonth() + 1;
+                return month.toString() === currentMonth;
+            });
+        }
+        if(currentWeek !== "all") {
+            filtered = filtered.filter(r => {
+                const week = getWeekNumber(r.date);
+                return week.toString() === currentWeek;
+            });
+        }
+        return filtered;
+    }
+    
+    function updateFiltersUI() {
+        const years = [...new Set(allRecords.map(r => r.date.split('-')[0]))].sort();
+        const yearSelect = document.getElementById('yearFilter');
+        yearSelect.innerHTML = '<option value="all">All Years</option>';
+        years.forEach(y => { yearSelect.innerHTML += `<option value="${y}">${y}</option>`; });
+        yearSelect.value = currentYear;
+        
+        const monthSelect = document.getElementById('monthFilter');
+        monthSelect.innerHTML = '<option value="all">All Months</option>';
+        for(let i=1;i<=12;i++) monthSelect.innerHTML += `<option value="${i}">${i}</option>`;
+        monthSelect.value = currentMonth;
+        
+        const weeks = [...new Set(allRecords.map(r => getWeekNumber(r.date)))].sort((a,b)=>a-b);
+        const weekSelect = document.getElementById('weekFilter');
+        weekSelect.innerHTML = '<option value="all">All Weeks</option>';
+        weeks.forEach(w => { weekSelect.innerHTML += `<option value="${w}">Week ${w}</option>`; });
+        weekSelect.value = currentWeek;
+    }
+    
+    function updateDashboardAndCharts() {
+        const filtered = getFilteredRecords();
         let totalServices = 0, totalProducts = 0, totalExpenses = 0;
-        allRecords.forEach(r => { totalServices += r.services; totalProducts += r.product; totalExpenses += r.expenses; });
+        filtered.forEach(r => { totalServices += r.services; totalProducts += r.product; totalExpenses += r.expenses; });
         const netTotal = totalServices + totalProducts - totalExpenses;
         document.getElementById('totalServices').innerHTML = formatKES(totalServices);
         document.getElementById('totalProducts').innerHTML = formatKES(totalProducts);
         document.getElementById('totalExpenses').innerHTML = formatKES(totalExpenses);
         document.getElementById('netProfit').innerHTML = formatKES(netTotal);
         
-        const tbody = document.getElementById('tableBody');
-        if(!allRecords.length) {
-            tbody.innerHTML = '<tr><td colspan="7">✨ No records. Select a date and add. ✨</td></tr>';
-        } else {
-            let html = '';
-            allRecords.forEach(rec => {
-                const net = rec.services + rec.product - rec.expenses;
-                const imgHtml = rec.image ? `<img src="${rec.image}" class="table-img" onclick="window.open('${rec.image}','_blank')">` : '—';
-                html += `<tr>
-                    <td>${rec.date}</td>
-                    <td>${formatKES(rec.services)}</td>
-                    <td>${formatKES(rec.product)}</td>
-                    <td>${formatKES(rec.expenses)}</td>
-                    <td>${formatKES(net)}</td>
-                    <td>${imgHtml}</td>
-                    <td><button class="edit-btn" data-date="${rec.date}">✏️ Edit</button></td>
-                </tr>`;
-            });
-            tbody.innerHTML = html;
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', () => loadDateForEdit(btn.dataset.date));
-            });
-        }
-        
-        const labels = allRecords.map(r => r.date);
-        const servicesData = allRecords.map(r => r.services);
-        const productsData = allRecords.map(r => r.product);
-        const expensesData = allRecords.map(r => r.expenses);
-        const netData = allRecords.map(r => r.services + r.product - r.expenses);
+        // Charts: use filtered records (aggregated per day)
+        const labels = filtered.map(r => r.date);
+        const servicesData = filtered.map(r => r.services);
+        const productsData = filtered.map(r => r.product);
+        const expensesData = filtered.map(r => r.expenses);
+        const netData = filtered.map(r => r.services + r.product - r.expenses);
         
         if(lineChart) lineChart.destroy();
         if(barChart) barChart.destroy();
@@ -188,12 +244,42 @@
         }
     }
     
+    // Render table (all records, not filtered)
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        if(!allRecords.length) {
+            tbody.innerHTML = '<tr><td colspan="7">✨ No records. Add above. ✨...</td></tr>';
+        } else {
+            let html = '';
+            allRecords.forEach(rec => {
+                const net = rec.services + rec.product - rec.expenses;
+                const imgHtml = rec.image ? `<img src="${rec.image}" class="table-img" onclick="window.open('${rec.image}','_blank')">` : '—';
+                html += `<tr>
+                    <td>${rec.date}</td>
+                    <td>${formatKES(rec.services)}</td>
+                    <td>${formatKES(rec.product)}</td>
+                    <td>${formatKES(rec.expenses)}</td>
+                    <td>${formatKES(net)}</td>
+                    <td>${imgHtml}</td>
+                    <td><button class="edit-btn" data-date="${rec.date}">✏️ Edit</button></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => loadDateForEdit(btn.dataset.date));
+            });
+        }
+    }
+    
+    // Real-time listener
     onSnapshot(q, (snapshot) => {
         allRecords = [];
         snapshot.forEach(docSnap => {
             allRecords.push({ id: docSnap.id, date: docSnap.id, ...docSnap.data() });
         });
-        updateUI();
+        updateFiltersUI();
+        renderTable();
+        updateDashboardAndCharts();
     });
     
     async function loadDateForEdit(date) {
@@ -243,7 +329,6 @@
         return docSnap.exists();
     }
     
-    // Save as New Record (will overwrite existing with warning)
     async function saveNewRecord() {
         const date = document.getElementById('recordDate').value;
         if(!date) { alert("Please select a date."); return; }
@@ -260,17 +345,17 @@
             image: currentImageDataUrl || null,
             updatedAt: new Date().toISOString()
         });
-        document.getElementById('recordStatus').innerText = 'Saved (new/overwritten)';
+        showSuccessMessage("✓ Record saved/overwritten successfully");
+        document.getElementById('recordStatus').innerText = 'Saved!';
         setTimeout(() => { document.getElementById('recordStatus').innerText = 'Ready'; }, 2000);
     }
     
-    // Update Existing Record (only if it exists)
     async function updateExisting() {
         const date = document.getElementById('recordDate').value;
         if(!date) { alert("Please select a date."); return; }
         const exists = await checkIfDateExists(date);
         if(!exists) {
-            alert(`No record found for ${date}. Use "Save as New Record" to create one.`);
+            alert(`No record found for ${date}. Use "Save as New" to create one.`);
             return;
         }
         const services = parseFloat(document.getElementById('servicesInput').value) || 0;
@@ -282,6 +367,7 @@
             image: currentImageDataUrl || null,
             updatedAt: new Date().toISOString()
         }, { merge: true });
+        showSuccessMessage("✓ Record updated successfully");
         document.getElementById('recordStatus').innerText = 'Updated!';
         setTimeout(() => { document.getElementById('recordStatus').innerText = 'Ready'; }, 2000);
     }
@@ -303,14 +389,15 @@
     }
     
     function exportToExcel() {
-        if(!allRecords.length) { alert("No data to export."); return; }
+        const filtered = getFilteredRecords();
+        if(!filtered.length) { alert("No data to export (filters active). Reset or change filters."); return; }
         const sheetData = [["Date", "Services (KES)", "Product (KES)", "Expenses (KES)", "Net Profit (KES)", "Has Image"]];
-        allRecords.forEach(rec => {
+        filtered.forEach(rec => {
             const net = (rec.services + rec.product - rec.expenses).toFixed(2);
             sheetData.push([rec.date, rec.services.toFixed(2), rec.product.toFixed(2), rec.expenses.toFixed(2), net, rec.image ? "Yes" : "No"]);
         });
         const ws = XLSX.utils.aoa_to_sheet(sheetData);
-        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Sales_by_Date");
+        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Filtered_Sales");
         XLSX.writeFile(wb, `Nabore_Sales_${new Date().toISOString().slice(0,19)}.xlsx`);
     }
     
@@ -327,10 +414,24 @@
         setTimeout(() => onDateChange(), 200);
     }
     
-    // Event binding
+    function resetFilters() {
+        currentYear = "all";
+        currentMonth = "all";
+        currentWeek = "all";
+        document.getElementById('yearFilter').value = "all";
+        document.getElementById('monthFilter').value = "all";
+        document.getElementById('weekFilter').value = "all";
+        updateDashboardAndCharts();
+    }
+    
+    // Event listeners
     document.getElementById('saveNewBtn').addEventListener('click', saveNewRecord);
     document.getElementById('updateExistingBtn').addEventListener('click', updateExisting);
     document.getElementById('excelExportBtn').addEventListener('click', exportToExcel);
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+    document.getElementById('yearFilter').addEventListener('change', (e) => { currentYear = e.target.value; updateDashboardAndCharts(); });
+    document.getElementById('monthFilter').addEventListener('change', (e) => { currentMonth = e.target.value; updateDashboardAndCharts(); });
+    document.getElementById('weekFilter').addEventListener('change', (e) => { currentWeek = e.target.value; updateDashboardAndCharts(); });
     document.getElementById('recordDate').addEventListener('change', onDateChange);
     document.getElementById('imageInput').addEventListener('change', (e) => {
         if(e.target.files && e.target.files[0]) handleImageSelection(e.target.files[0]);
