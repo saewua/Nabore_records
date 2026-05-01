@@ -8,39 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nabore Sales">
     <link rel="manifest" href="manifest.json">
-    <title>Nabore Bookshop · Firebase PWA · KES</title>
-    <!-- Chart.js & SheetJS -->
+    <title>Nabore Bookshop · Firebase PWA · Any Date</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <!-- Firebase 9 Modular SDK -->
-    <script type="module">
-        // ========== 🔥 PASTE YOUR FIREBASE CONFIG HERE ==========
-        const firebaseConfig = {
-            // 👇 Replace with your own project's config from Firebase Console
-            apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
-            authDomain: "nabore-bookshop.firebaseapp.com",
-            projectId: "nabore-bookshop",
-            storageBucket: "nabore-bookshop.firebasestorage.app",
-            messagingSenderId: "619207980890",
-            appId: "1:619207980890:web:c680907f519b3d6efa2563"
-        };
-        // ========================================================
-        
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-        
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        window.db = db; // expose for inline scripts
-        window.collection = collection;
-        window.doc = doc;
-        window.setDoc = setDoc;
-        window.onSnapshot = onSnapshot;
-        window.query = query;
-        window.orderBy = orderBy;
-        
-        console.log("Firebase initialized");
-    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Inter', sans-serif; }
         body { background: #f0f4fa; padding: 16px; color: #1e2a3e; }
@@ -83,14 +53,14 @@
 <body>
 <div class="app-container">
     <div class="shop-header">
-        <h1>☁️ Nabore Bookshop · Cloud Sync (Firebase)</h1>
-        <div class="badge-pwa">KES · Real‑time · PWA</div>
+        <h1>📅 Nabore Bookshop · Any Date (Cloud Sync)</h1>
+        <div class="badge-pwa">KES · Real‑time · Past records allowed</div>
     </div>
 
     <div class="entry-card">
-        <h3>📝 Record daily sales (KES) & attach photo</h3>
+        <h3>📝 Record sales for any date (including previous months)</h3>
         <div class="form-row">
-            <div class="input-group"><label>📅 Date</label><input type="date" id="recordDate" required></div>
+            <div class="input-group"><label>📅 Date (any)</label><input type="date" id="recordDate" required title="Select any past or future date"></div>
             <div class="input-group"><label>💼 Services (KES)</label><input type="number" id="servicesInput" step="any" value="0"></div>
             <div class="input-group"><label>📚 Product (KES)</label><input type="number" id="productInput" step="any" value="0"></div>
             <div class="input-group"><label>🧾 Expenses (KES)</label><input type="number" id="expensesInput" step="any" value="0"></div>
@@ -105,7 +75,7 @@
         <div class="action-buttons">
             <button id="excelExportBtn" class="btn-outline">📎 Download Excel</button>
         </div>
-        <p style="font-size:0.7rem; margin-top: 10px;">✅ Data syncs live across all devices (phone, laptop, tablet).</p>
+        <p style="font-size:0.7rem; margin-top: 10px;">✅ Data syncs live across all devices. You can enter ANY date (e.g., 2024-01-15). Each date creates/updates one record.</p>
     </div>
 
     <div class="dashboard-grid">
@@ -122,26 +92,27 @@
 
     <div class="table-wrapper">
         <table id="salesTable">
-            <thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th><th>Edit</th></tr></thead>
+            <thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th><th>Edit</th></thead>
             <tbody id="tableBody"><tr><td colspan="7">Loading records from cloud...</td></tr></tbody>
         </table>
     </div>
-    <footer>🔥 Powered by Firebase – real‑time sync | No “Delete” – edit only | Tap image to enlarge</footer>
+    <footer>🔥 Firebase real‑time sync | Edit only (no delete) | Tap image to enlarge | Works offline after install</footer>
 </div>
 
 <script type="module">
-    import { getFirestore, collection, onSnapshot, doc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    
-    // Re‑declare config (same as above – must match)
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
+  apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
+  authDomain: "nabore-bookshop.firebaseapp.com",
+  projectId: "nabore-bookshop",
+  storageBucket: "nabore-bookshop.firebasestorage.app",
+  messagingSenderId: "619207980890",
+  appId: "1:619207980890:web:c680907f519b3d6efa2563"
+};
+    // ================================================================
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const salesRef = collection(db, "sales");
@@ -149,11 +120,10 @@
     
     let lineChart = null, barChart = null;
     let currentImageDataUrl = null;
-    let allRecords = []; // store latest for charts
+    let allRecords = [];
     
     function formatKES(v) { return `KES ${v.toFixed(2)}`; }
     
-    // Render UI from allRecords
     function updateUI() {
         // Dashboard
         let totalServices = 0, totalProducts = 0, totalExpenses = 0;
@@ -166,7 +136,7 @@
         
         // Table
         const tbody = document.getElementById('tableBody');
-        if(!allRecords.length) { tbody.innerHTML = '<tr><td colspan="7">✨ No records. Add above. ✨</td></tr>'; }
+        if(!allRecords.length) { tbody.innerHTML = '<tr><td colspan="7">✨ No records. Add above (any date). ✨</td>--' }
         else {
             let html = '';
             allRecords.forEach(rec => {
@@ -219,33 +189,27 @@
         }
     }
     
-    // Firestore real‑time listener
+    // Real-time listener
     onSnapshot(q, (snapshot) => {
         allRecords = [];
-        snapshot.forEach(docSnap => {
-            allRecords.push({ id: docSnap.id, ...docSnap.data() });
-        });
+        snapshot.forEach(docSnap => { allRecords.push({ id: docSnap.id, ...docSnap.data() }); });
         allRecords.sort((a,b) => new Date(a.date) - new Date(b.date));
         updateUI();
     });
     
-    async function saveRecordToFirestore(date, services, product, expenses, imageBase64) {
-        const docRef = doc(db, "sales", date); // use date as document ID (unique)
-        await setDoc(docRef, {
-            date, services, product, expenses,
-            image: imageBase64 || null,
-            updatedAt: new Date().toISOString()
-        });
+    async function saveRecord(date, services, product, expenses, imageBase64) {
+        const docRef = doc(db, "sales", date);
+        await setDoc(docRef, { date, services, product, expenses, image: imageBase64 || null, updatedAt: new Date().toISOString() });
     }
     
     async function handleSave() {
         const date = document.getElementById('recordDate').value;
-        if(!date) { alert("Select date"); return; }
+        if(!date) { alert("Please select a date (any date allowed)."); return; }
         const services = parseFloat(document.getElementById('servicesInput').value) || 0;
         const product = parseFloat(document.getElementById('productInput').value) || 0;
         const expenses = parseFloat(document.getElementById('expensesInput').value) || 0;
-        await saveRecordToFirestore(date, services, product, expenses, currentImageDataUrl);
-        // reset form
+        await saveRecord(date, services, product, expenses, currentImageDataUrl);
+        // Reset form but keep date (user may want to add another date)
         document.getElementById('servicesInput').value = 0;
         document.getElementById('productInput').value = 0;
         document.getElementById('expensesInput').value = 0;
@@ -277,7 +241,7 @@
                 document.getElementById('imageInput').value = '';
             }
             document.querySelector('.entry-card').scrollIntoView({ behavior: 'smooth' });
-        } else alert("Record not found");
+        } else { alert("No record found for that date. You can create a new one."); }
     }
     
     function handleImageSelection(file) {
@@ -310,15 +274,16 @@
     
     function setDefaultDate() {
         const today = new Date().toISOString().split('T')[0];
-        if(!document.getElementById('recordDate').value) document.getElementById('recordDate').value = today;
+        const dateInput = document.getElementById('recordDate');
+        if(!dateInput.value) dateInput.value = today;
     }
     
-    // Events
+    // Event listeners
     document.getElementById('saveRecordBtn').addEventListener('click', handleSave);
     document.getElementById('excelExportBtn').addEventListener('click', exportToExcel);
     document.getElementById('editRecordBtn').addEventListener('click', () => {
         const date = document.getElementById('recordDate').value;
-        if(!date) alert("Select a date to edit");
+        if(!date) alert("Select a date first");
         else editRecordByDate(date);
     });
     document.getElementById('imageInput').addEventListener('change', (e) => {
@@ -327,7 +292,7 @@
     });
     setDefaultDate();
     
-    // Register service worker
+    // Service Worker for offline install
     if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(e=>console.log("SW not needed"));
 </script>
 </body>
