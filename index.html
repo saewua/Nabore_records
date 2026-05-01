@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#4169E1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nabore Sales">
     <link rel="manifest" href="manifest.json">
-    <title>Nabore Bookshop · Sales PWA · KES</title>
+    <title>Nabore Bookshop · PWA · KES · Image Capture</title>
     <!-- Chart.js & SheetJS (XLSX) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -22,13 +22,14 @@
 
         body {
             background: #f0f4fa;
-            padding: 24px 20px;
+            padding: 16px;
             color: #1e2a3e;
         }
 
         .app-container {
             max-width: 1400px;
             margin: 0 auto;
+            width: 100%;
         }
 
         /* Royal Blue Theme */
@@ -37,326 +38,325 @@
             justify-content: space-between;
             align-items: baseline;
             flex-wrap: wrap;
-            margin-bottom: 28px;
+            gap: 12px;
+            margin-bottom: 24px;
             border-bottom: 3px solid #4169E1;
             padding-bottom: 12px;
         }
         h1 {
-            font-size: 1.9rem;
+            font-size: 1.6rem;
             font-weight: 700;
             background: linear-gradient(135deg, #4169E1, #1e3a8a);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            letter-spacing: -0.3px;
         }
         .badge-pwa {
             background: #e9edf5;
             padding: 5px 14px;
             border-radius: 40px;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             font-weight: 500;
             color: #4169E1;
-            box-shadow: inset 0 0 0 1px #b9c8f0;
         }
 
-        /* Dashboard cards */
+        /* Dashboard cards - responsive grid */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
         .card {
             background: white;
-            border-radius: 28px;
-            padding: 20px 18px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
-            transition: all 0.2s;
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             border: 1px solid rgba(65,105,225,0.15);
         }
         .card h3 {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-weight: 600;
             color: #4b5e7a;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
         .card .value {
-            font-size: 2.3rem;
+            font-size: 1.6rem;
             font-weight: 800;
             color: #1e3a8a;
-            line-height: 1.2;
+            word-break: break-word;
         }
         .card .sub {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #5f7f9e;
-            margin-top: 8px;
-        }
-        .net-card {
-            background: linear-gradient(125deg, #eef3ff, #ffffff);
-            border-left: 4px solid #4169E1;
         }
 
-        /* Chart Sections */
+        /* Charts wrapper - responsive stacking */
         .charts-wrapper {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 24px;
-            margin-bottom: 32px;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (min-width: 900px) {
+            .charts-wrapper {
+                grid-template-columns: 1fr 1fr;
+            }
+            h1 { font-size: 1.9rem; }
+            .card .value { font-size: 2rem; }
+            body { padding: 24px; }
         }
         .chart-card {
             background: white;
-            border-radius: 28px;
-            padding: 20px 18px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             border: 1px solid #e2edf2;
         }
         .chart-card h2 {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             color: #1e3a8a;
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
         }
         canvas {
-            max-height: 320px;
+            max-height: 280px;
             width: 100%;
         }
 
-        /* Form - now at the top */
+        /* Entry Form - fully responsive */
         .entry-card {
             background: white;
-            border-radius: 28px;
-            padding: 22px 24px;
-            margin-bottom: 32px;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.03);
+            border-radius: 24px;
+            padding: 18px;
+            margin-bottom: 28px;
             border: 1px solid #dde9ef;
         }
         .form-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 14px;
             align-items: flex-end;
         }
         .input-group {
-            flex: 1;
-            min-width: 150px;
+            flex: 1 1 160px;
+            min-width: 130px;
         }
         .input-group label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
             color: #4169E1;
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
-        .input-group input {
+        .input-group input, .input-group button {
             width: 100%;
-            padding: 12px 14px;
+            padding: 10px 12px;
             border-radius: 40px;
             border: 1.5px solid #cddfe6;
             background: #fefefe;
-            font-size: 1rem;
-            transition: 0.2s;
+            font-size: 0.9rem;
         }
-        .input-group input:focus {
-            outline: none;
-            border-color: #4169E1;
-            box-shadow: 0 0 0 3px rgba(65,105,225,0.2);
+        .input-group button {
+            background: #4169E1;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .image-capture-group {
+            flex: 1 1 200px;
+        }
+        .capture-preview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .capture-preview img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #cddfe6;
+            background: #f8fafc;
+        }
+        .capture-preview button {
+            width: auto;
+            background: #eef3ff;
+            color: #4169E1;
+            padding: 6px 14px;
+            font-size: 0.75rem;
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
         }
         button {
             background: #4169E1;
             border: none;
             color: white;
             font-weight: 600;
-            padding: 12px 28px;
+            padding: 10px 20px;
             border-radius: 40px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             transition: 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        button:hover {
-            background: #2b4fc7;
-            transform: translateY(-1px);
+            gap: 6px;
         }
         .btn-outline {
             background: transparent;
             border: 1.5px solid #4169E1;
             color: #4169E1;
         }
-        .btn-outline:hover {
-            background: #eef3ff;
-            transform: none;
-        }
         .danger-btn {
             background: #b91c1c;
         }
-        .danger-btn:hover {
-            background: #991b1b;
-        }
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
 
-        /* Table */
+        /* Table - horizontal scroll for small screens */
         .table-wrapper {
             background: white;
-            border-radius: 28px;
-            padding: 6px 0 12px 0;
+            border-radius: 24px;
             overflow-x: auto;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            margin-bottom: 16px;
             border: 1px solid #e2edf2;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            min-width: 600px;
+        }
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid #eef3f6;
         }
         th {
-            text-align: left;
-            padding: 18px 14px;
             background: #f8faff;
             color: #1e3a8a;
-            font-weight: 600;
-            border-bottom: 1px solid #cddef5;
         }
-        td {
-            padding: 14px 14px;
-            border-bottom: 1px solid #eef3f6;
-            vertical-align: middle;
+        .table-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
         }
         .action-icons {
             display: flex;
-            gap: 12px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .edit-btn, .delete-btn {
             background: none;
             border: none;
-            font-size: 1.1rem;
+            font-size: 0.8rem;
             cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 40px;
-            box-shadow: none;
+            padding: 4px 10px;
+            border-radius: 30px;
         }
-        .edit-btn { color: #4169E1; background: #eef3ff; }
-        .delete-btn { color: #b91c1c; background: #fee2e2; }
-        .edit-btn:hover, .delete-btn:hover { transform: scale(0.96); }
+        .edit-btn { background: #eef3ff; color: #4169E1; }
+        .delete-btn { background: #fee2e2; color: #b91c1c; }
         footer {
-            margin-top: 28px;
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #6f9eb0;
+            margin-top: 24px;
         }
-        .currency-symbol {
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-right: 4px;
-        }
-        @media (max-width: 860px) {
-            .charts-wrapper { grid-template-columns: 1fr; }
-            body { padding: 16px; }
-            .card .value { font-size: 1.8rem; }
-            button { padding: 8px 18px; }
+        @media (max-width: 550px) {
+            .form-row .input-group { flex: 1 1 100%; }
+            .card .value { font-size: 1.3rem; }
+            h1 { font-size: 1.3rem; }
         }
     </style>
 </head>
 <body>
 <div class="app-container">
     <div class="shop-header">
-        <h1>👑 Nabore Bookshop · Sales Manager (KES)</h1>
-        <div class="badge-pwa">⚡ PWA · Kenyan Shilling</div>
+        <h1>📸 Nabore Bookshop · Sales + Image Capture</h1>
+        <div class="badge-pwa">PWA · KES · Responsive</div>
     </div>
 
-    <!-- DATA ENTRY FORM - NOW AT THE VERY TOP (before dashboard) -->
+    <!-- DATA ENTRY FORM (with camera capture) -->
     <div class="entry-card">
-        <h3 style="margin-bottom: 16px;">📝 Record daily sales (Kenyan Shilling)</h3>
+        <h3 style="margin-bottom: 14px;">📝 Record daily sales (KES) & attach photo</h3>
         <div class="form-row">
             <div class="input-group">
                 <label>📅 Date</label>
                 <input type="date" id="recordDate" required>
             </div>
             <div class="input-group">
-                <label>💼 Total Services (KES)</label>
+                <label>💼 Services (KES)</label>
                 <input type="number" id="servicesInput" step="any" value="0" placeholder="0.00">
             </div>
             <div class="input-group">
-                <label>📚 Total Product (KES)</label>
+                <label>📚 Product (KES)</label>
                 <input type="number" id="productInput" step="any" value="0" placeholder="0.00">
             </div>
             <div class="input-group">
                 <label>🧾 Expenses (KES)</label>
                 <input type="number" id="expensesInput" step="any" value="0" placeholder="0.00">
             </div>
+            <div class="input-group image-capture-group">
+                <label>📸 Image / Receipt</label>
+                <input type="file" id="imageInput" accept="image/*" capture="environment" style="padding: 8px;">
+                <div class="capture-preview" id="imagePreviewArea"></div>
+            </div>
             <div class="input-group">
-                <button id="saveRecordBtn">💾 Save / Update</button>
+                <button id="saveRecordBtn">💾 Save Record</button>
             </div>
         </div>
-        <div class="action-buttons" style="margin-top: 18px;">
-            <button id="excelExportBtn" class="btn-outline">📎 Download Excel (.xlsx)</button>
+        <div class="action-buttons">
+            <button id="excelExportBtn" class="btn-outline">📎 Download Excel</button>
             <button id="clearAllBtn" class="danger-btn">⚠️ Reset All Data</button>
         </div>
-        <p style="font-size:0.7rem; margin-top: 12px; color:#4169E1;">* All amounts in Kenyan Shilling (KES) | Edit/delete from table below.</p>
+        <p style="font-size:0.7rem; margin-top: 10px;">* Take photo or upload image (attached to selected date). All amounts in KES.</p>
     </div>
 
-    <!-- DASHBOARD CARDS -->
-    <div class="dashboard-grid" id="dashboardCards">
-        <div class="card"><h3>📊 Total Services</h3><div class="value" id="totalServices">KES 0.00</div><div class="sub">service revenue</div></div>
-        <div class="card"><h3>📦 Total Product</h3><div class="value" id="totalProducts">KES 0.00</div><div class="sub">product sales</div></div>
-        <div class="card"><h3>⚠️ Total Expenses</h3><div class="value" id="totalExpenses">KES 0.00</div><div class="sub">operating costs</div></div>
-        <div class="card net-card"><h3>💰 Net Profit</h3><div class="value" id="netProfit">KES 0.00</div><div class="sub">services + product - expenses</div></div>
+    <!-- DASHBOARD -->
+    <div class="dashboard-grid">
+        <div class="card"><h3>📊 Total Services</h3><div class="value" id="totalServices">KES 0.00</div><div class="sub">revenue</div></div>
+        <div class="card"><h3>📦 Total Product</h3><div class="value" id="totalProducts">KES 0.00</div><div class="sub">sales</div></div>
+        <div class="card"><h3>⚠️ Total Expenses</h3><div class="value" id="totalExpenses">KES 0.00</div><div class="sub">costs</div></div>
+        <div class="card net-card"><h3>💰 Net Profit</h3><div class="value" id="netProfit">KES 0.00</div><div class="sub">services+product-expenses</div></div>
     </div>
 
-    <!-- CHARTS: LINE + BAR -->
+    <!-- CHARTS -->
     <div class="charts-wrapper">
-        <div class="chart-card">
-            <h2>📈 Daily Trends (Line) · KES</h2>
-            <canvas id="salesLineChart" width="500" height="300" style="max-width:100%; height:auto"></canvas>
-        </div>
-        <div class="chart-card">
-            <h2>📊 Daily Net Profit (Bar) · KES</h2>
-            <canvas id="netProfitBarChart" width="500" height="300" style="max-width:100%; height:auto"></canvas>
-        </div>
+        <div class="chart-card"><h2>📈 Daily Trends (Line) · KES</h2><canvas id="salesLineChart"></canvas></div>
+        <div class="chart-card"><h2>📊 Daily Net Profit (Bar) · KES</h2><canvas id="netProfitBarChart"></canvas></div>
     </div>
 
-    <!-- RECORDS TABLE -->
+    <!-- RECORDS TABLE with image thumbnails -->
     <div class="table-wrapper">
         <table id="salesTable">
-            <thead>
-                <tr><th>Date</th><th>Services (KES)</th><th>Product (KES)</th><th>Expenses (KES)</th><th>Net (KES)</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="6" style="text-align:center;">✨ No records. Use the form above to add sales.✨</td></tr>
-            </tbody>
+            <thead><tr><th>Date</th><th>Services (KES)</th><th>Product (KES)</th><th>Expenses (KES)</th><th>Net (KES)</th><th>Image</th><th>Actions</th></tr></thead>
+            <tbody id="tableBody"><tr><td colspan="7">✨ No records. Use form above to add. ✨</td></tr></tbody>
         </table>
     </div>
-    <footer>⬇️ Install to Chrome: click install icon (PWA) • Royal Blue • Kenyan Shilling • Data entry at top</footer>
+    <footer>⬇️ Install app | Fully responsive | Tap image to view full size | Camera capture works on mobile</footer>
 </div>
 
 <script>
-    // ---------- STORAGE KEY ----------
-    const STORAGE_KEY = 'nabore_sales_records';
+    const STORAGE_KEY = 'nabore_sales_records_v2'; // new version with images
+    let lineChart = null, barChart = null;
+    let currentImageDataUrl = null; // temporary for unsaved image
 
-    // Global chart instances
-    let lineChart = null;
-    let barChart = null;
+    // Helper
+    function formatKES(val) { return `KES ${val.toFixed(2)}`; }
 
-    // Helper: format as KES (with symbol)
-    function formatKES(value) {
-        return `KES ${value.toFixed(2)}`;
-    }
-
-    // Get records from localStorage, sorted by date ASC
     function getRecords() {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (!stored) return [];
@@ -366,231 +366,129 @@
             return records.sort((a,b) => new Date(a.date) - new Date(b.date));
         } catch(e) { return []; }
     }
+    function saveRecords(records) { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
 
-    // Save records array
-    function saveRecords(records) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    }
-
-    // Add/update record
-    function addOrUpdateRecord(date, services, product, expenses) {
+    function addOrUpdateRecord(date, services, product, expenses, imageDataUrl = null) {
         if (!date) return false;
         let records = getRecords();
-        const existingIndex = records.findIndex(rec => rec.date === date);
+        const existingIndex = records.findIndex(r => r.date === date);
         const newRecord = {
-            date: date,
-            services: parseFloat(services) || 0,
-            product: parseFloat(product) || 0,
-            expenses: parseFloat(expenses) || 0
+            date, services: parseFloat(services)||0, product: parseFloat(product)||0,
+            expenses: parseFloat(expenses)||0, image: imageDataUrl || null
         };
         if (existingIndex !== -1) {
+            // keep existing image if new image not provided? but we pass image from form
+            if (imageDataUrl === undefined || imageDataUrl === null) {
+                // if user didn't upload new image, keep old one
+                if (records[existingIndex].image) newRecord.image = records[existingIndex].image;
+            }
             records[existingIndex] = newRecord;
         } else {
             records.push(newRecord);
         }
-        records.sort((a,b) => new Date(a.date) - new Date(b.date));
+        records.sort((a,b)=>new Date(a.date)-new Date(b.date));
         saveRecords(records);
         return true;
     }
 
     function deleteRecordByDate(date) {
         let records = getRecords();
-        const filtered = records.filter(rec => rec.date !== date);
-        if (filtered.length !== records.length) {
-            saveRecords(filtered);
-            return true;
-        }
+        const filtered = records.filter(r => r.date !== date);
+        if (filtered.length !== records.length) { saveRecords(filtered); return true; }
         return false;
     }
-
     function clearAllData() {
-        if (confirm("⚠️ Delete ALL sales records? This cannot be undone. All KES data will be lost.")) {
-            saveRecords([]);
-            refreshUI();
-        }
+        if(confirm("⚠️ Delete ALL sales records and images? Cannot undo.")) { saveRecords([]); refreshUI(); }
     }
 
-    // Dashboard aggregator (display formatted KES)
     function updateDashboard(records) {
-        let totalServices = 0, totalProducts = 0, totalExpenses = 0;
-        records.forEach(rec => {
-            totalServices += rec.services;
-            totalProducts += rec.product;
-            totalExpenses += rec.expenses;
-        });
-        const netProfit = totalServices + totalProducts - totalExpenses;
+        let totalServices=0, totalProducts=0, totalExpenses=0;
+        records.forEach(r=>{ totalServices+=r.services; totalProducts+=r.product; totalExpenses+=r.expenses; });
+        const net = totalServices+totalProducts-totalExpenses;
         document.getElementById('totalServices').innerHTML = formatKES(totalServices);
         document.getElementById('totalProducts').innerHTML = formatKES(totalProducts);
         document.getElementById('totalExpenses').innerHTML = formatKES(totalExpenses);
-        document.getElementById('netProfit').innerHTML = formatKES(netProfit);
+        document.getElementById('netProfit').innerHTML = formatKES(net);
     }
 
-    // RENDER TABLE with KES formatting
     function renderTable(records) {
         const tbody = document.getElementById('tableBody');
-        if (!records.length) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">✨ No records. Use the form above to add sales. ✨</td></tr>';
-            return;
-        }
-        let html = '';
-        records.forEach(rec => {
-            const net = rec.services + rec.product - rec.expenses;
-            html += `<tr>
-                        <td>${rec.date}</td>
-                        <td>${formatKES(rec.services)}</td>
-                        <td>${formatKES(rec.product)}</td>
-                        <td>${formatKES(rec.expenses)}</td>
-                        <td>${formatKES(net)}</td>
-                        <td class="action-icons">
-                            <button class="edit-btn" data-date="${rec.date}">✏️ Edit</button>
-                            <button class="delete-btn" data-date="${rec.date}">🗑️ Delete</button>
-                        </td>
-                    </tr>`;
+        if(!records.length) { tbody.innerHTML='<tr><td colspan="7">✨ No records. Add sales above. ✨</td></tr>'; return; }
+        let html='';
+        records.forEach(rec=>{
+            const net = rec.services+rec.product-rec.expenses;
+            const imgHtml = rec.image ? `<img src="${rec.image}" class="table-img" onclick="window.open('${rec.image}','_blank')" style="cursor:pointer;" title="Tap to view">` : '<span style="color:#aaa;">—</span>';
+            html+=`<tr>
+                <td>${rec.date}</td>
+                <td>${formatKES(rec.services)}</td><td>${formatKES(rec.product)}</td><td>${formatKES(rec.expenses)}</td>
+                <td>${formatKES(net)}</td>
+                <td>${imgHtml}</td>
+                <td class="action-icons">
+                    <button class="edit-btn" data-date="${rec.date}">✏️ Edit</button>
+                    <button class="delete-btn" data-date="${rec.date}">🗑️ Del</button>
+                </td>
+            </tr>`;
         });
         tbody.innerHTML = html;
-
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const date = btn.getAttribute('data-date');
-                editRecordByDate(date);
-            });
-        });
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const date = btn.getAttribute('data-date');
-                if (confirm(`Delete record for ${date}?`)) {
-                    deleteRecordByDate(date);
-                    refreshUI();
-                }
-            });
-        });
+        document.querySelectorAll('.edit-btn').forEach(btn=>btn.addEventListener('click',()=>editRecordByDate(btn.dataset.date)));
+        document.querySelectorAll('.delete-btn').forEach(btn=>btn.addEventListener('click',()=>{ if(confirm(`Delete ${btn.dataset.date}?`)) deleteRecordByDate(btn.dataset.date); refreshUI(); }));
     }
 
     function editRecordByDate(date) {
         const records = getRecords();
-        const record = records.find(r => r.date === date);
-        if (record) {
-            document.getElementById('recordDate').value = record.date;
-            document.getElementById('servicesInput').value = record.services;
-            document.getElementById('productInput').value = record.product;
-            document.getElementById('expensesInput').value = record.expenses;
-            document.querySelector('.entry-card').scrollIntoView({ behavior: 'smooth' });
-        } else {
-            alert("Record not found");
+        const rec = records.find(r=>r.date===date);
+        if(rec){
+            document.getElementById('recordDate').value = rec.date;
+            document.getElementById('servicesInput').value = rec.services;
+            document.getElementById('productInput').value = rec.product;
+            document.getElementById('expensesInput').value = rec.expenses;
+            // show existing image preview
+            const previewDiv = document.getElementById('imagePreviewArea');
+            if(rec.image){
+                previewDiv.innerHTML = `<img src="${rec.image}" style="width:60px;height:60px;border-radius:12px;"><button id="clearTempImageBtn" class="btn-outline" style="padding:4px 8px;">🗑️ Remove</button>`;
+                document.getElementById('clearTempImageBtn')?.addEventListener('click',()=>{ 
+                    previewDiv.innerHTML = ''; 
+                    currentImageDataUrl = null;
+                    document.getElementById('imageInput').value = '';
+                });
+                currentImageDataUrl = rec.image;
+            } else {
+                previewDiv.innerHTML = '';
+                currentImageDataUrl = null;
+                document.getElementById('imageInput').value = '';
+            }
+            document.querySelector('.entry-card').scrollIntoView({behavior:'smooth'});
         }
     }
 
-    // ----- CHARTS with KES axis labels -----
+    // Chart functions
     function renderLineChart(records) {
         const ctx = document.getElementById('salesLineChart').getContext('2d');
-        const labels = records.map(r => r.date);
-        const servicesData = records.map(r => r.services);
-        const productsData = records.map(r => r.product);
-        const expensesData = records.map(r => r.expenses);
-        
-        if (lineChart) lineChart.destroy();
-        if (!labels.length) {
-            lineChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: ['No Data'], datasets: [] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
-            });
+        const labels = records.map(r=>r.date), servicesData=records.map(r=>r.services), productsData=records.map(r=>r.product), expensesData=records.map(r=>r.expenses);
+        if(lineChart) lineChart.destroy();
+        if(!labels.length){
+            lineChart = new Chart(ctx,{type:'line',data:{labels:['No Data'],datasets:[]},options:{responsive:true}});
             return;
         }
-        lineChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: '📌 Services (KES)', data: servicesData, borderColor: '#4169E1', backgroundColor: 'rgba(65,105,225,0.05)', tension: 0.2, fill: false, pointBackgroundColor: '#1e3a8a', pointRadius: 4 },
-                    { label: '📘 Product (KES)', data: productsData, borderColor: '#5a7de0', backgroundColor: 'rgba(90,125,224,0.05)', tension: 0.2, fill: false, pointBackgroundColor: '#2b4fc7' },
-                    { label: '⚠️ Expenses (KES)', data: expensesData, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.05)', tension: 0.2, fill: false, pointBackgroundColor: '#d97706' }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                let value = context.raw;
-                                return `${label}: KES ${value.toFixed(2)}`;
-                            }
-                        }
-                    },
-                    legend: { position: 'top' }
-                },
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        title: { display: true, text: 'Amount (KES)', color: '#4169E1' },
-                        ticks: { callback: (val) => 'KES ' + val.toFixed(0) }
-                    },
-                    x: { ticks: { maxRotation: 35 } }
-                }
-            }
+        lineChart = new Chart(ctx,{
+            type:'line', data:{labels, datasets:[
+                {label:'📌 Services (KES)', data:servicesData, borderColor:'#4169E1', tension:0.2, fill:false, pointRadius:4},
+                {label:'📘 Product (KES)', data:productsData, borderColor:'#5a7de0', tension:0.2, fill:false},
+                {label:'⚠️ Expenses (KES)', data:expensesData, borderColor:'#f59e0b', tension:0.2, fill:false}
+            ]},
+            options:{responsive:true, maintainAspectRatio:true, plugins:{tooltip:{callbacks:{label:(ctx)=>`${ctx.dataset.label}: KES ${ctx.raw.toFixed(2)}`}}}, scales:{y:{beginAtZero:true,title:{display:true,text:'KES'}, ticks:{callback:(v)=>'KES '+v}}}}
         });
     }
-
     function renderBarChart(records) {
         const ctx = document.getElementById('netProfitBarChart').getContext('2d');
-        const labels = records.map(r => r.date);
-        const netProfits = records.map(r => (r.services + r.product - r.expenses));
-        
-        if (barChart) barChart.destroy();
-        if (!labels.length) {
-            barChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: ['No Data'], datasets: [] },
-                options: { responsive: true, maintainAspectRatio: true }
-            });
-            return;
-        }
-        barChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '💰 Net Profit (KES)',
-                        data: netProfits,
-                        backgroundColor: 'rgba(65, 105, 225, 0.7)',
-                        borderColor: '#4169E1',
-                        borderWidth: 1.5,
-                        borderRadius: 8,
-                        barPercentage: 0.65
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    tooltip: { 
-                        callbacks: { 
-                            label: (ctx) => `Net Profit: KES ${ctx.raw.toFixed(2)}` 
-                        } 
-                    },
-                    legend: { position: 'top' }
-                },
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        title: { display: true, text: 'Net Profit (KES)', color: '#4169E1' }, 
-                        grid: { color: '#e2e8f0' },
-                        ticks: { callback: (val) => 'KES ' + val.toFixed(0) }
-                    },
-                    x: { ticks: { maxRotation: 35 } }
-                }
-            }
+        const labels = records.map(r=>r.date), netData = records.map(r=>r.services+r.product-r.expenses);
+        if(barChart) barChart.destroy();
+        if(!labels.length){ barChart = new Chart(ctx,{type:'bar',data:{labels:['No Data'],datasets:[]},options:{responsive:true}}); return; }
+        barChart = new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'💰 Net Profit (KES)', data:netData, backgroundColor:'rgba(65,105,225,0.7)', borderRadius:8}]},
+            options:{responsive:true, plugins:{tooltip:{callbacks:{label:(ctx)=>`Net: KES ${ctx.raw.toFixed(2)}`}}}, scales:{y:{beginAtZero:true, title:{display:true,text:'KES'}, ticks:{callback:(v)=>'KES '+v}}}}
         });
     }
 
-    // Full UI refresh
     function refreshUI() {
         const records = getRecords();
         updateDashboard(records);
@@ -599,102 +497,105 @@
         renderBarChart(records);
     }
 
-    // Save form data
-    function handleSaveRecord() {
-        let date = document.getElementById('recordDate').value;
-        if (!date) {
-            alert("Please select a date.");
-            return;
-        }
-        let services = parseFloat(document.getElementById('servicesInput').value);
-        let product = parseFloat(document.getElementById('productInput').value);
-        let expenses = parseFloat(document.getElementById('expensesInput').value);
-        if (isNaN(services)) services = 0;
-        if (isNaN(product)) product = 0;
-        if (isNaN(expenses)) expenses = 0;
-        
-        addOrUpdateRecord(date, services, product, expenses);
+    // Image handling
+    function handleImageSelection(file) {
+        if(!file) { currentImageDataUrl = null; document.getElementById('imagePreviewArea').innerHTML = ''; return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            currentImageDataUrl = e.target.result;
+            const previewDiv = document.getElementById('imagePreviewArea');
+            previewDiv.innerHTML = `<img src="${currentImageDataUrl}" style="width:60px;height:60px;border-radius:12px;"><button id="clearImageBtn" class="btn-outline" style="padding:4px 8px;">✖ Remove</button>`;
+            document.getElementById('clearImageBtn')?.addEventListener('click',()=>{
+                currentImageDataUrl = null;
+                previewDiv.innerHTML = '';
+                document.getElementById('imageInput').value = '';
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function saveRecordWithImage() {
+        const date = document.getElementById('recordDate').value;
+        if(!date){ alert("Please select date."); return; }
+        const services = parseFloat(document.getElementById('servicesInput').value)||0;
+        const product = parseFloat(document.getElementById('productInput').value)||0;
+        const expenses = parseFloat(document.getElementById('expensesInput').value)||0;
+        // capture image from current state (either newly captured or kept)
+        const imageToStore = currentImageDataUrl || null;
+        addOrUpdateRecord(date, services, product, expenses, imageToStore);
         refreshUI();
-        // Reset numeric fields to zero for quick next entry, keep date for convenience
+        // reset form numbers but keep date & clear image preview
         document.getElementById('servicesInput').value = 0;
         document.getElementById('productInput').value = 0;
         document.getElementById('expensesInput').value = 0;
+        // clear image preview and stored temp
+        currentImageDataUrl = null;
+        document.getElementById('imagePreviewArea').innerHTML = '';
+        document.getElementById('imageInput').value = '';
         document.getElementById('servicesInput').focus();
     }
 
-    // EXPORT to Excel (with KES label in header)
     function exportToExcel() {
         const records = getRecords();
-        if (records.length === 0) {
-            alert("No data to export. Add sales records first.");
-            return;
-        }
-        const sheetData = [["Date", "Total Services (KES)", "Total Product (KES)", "Expenses (KES)", "Net Profit (KES)"]];
-        records.forEach(rec => {
-            const net = (rec.services + rec.product - rec.expenses).toFixed(2);
-            sheetData.push([rec.date, rec.services.toFixed(2), rec.product.toFixed(2), rec.expenses.toFixed(2), net]);
+        if(!records.length){ alert("No data to export."); return; }
+        const sheetData = [["Date", "Services (KES)", "Product (KES)", "Expenses (KES)", "Net Profit (KES)", "Has Image"]];
+        records.forEach(rec=>{
+            const net = (rec.services+rec.product-rec.expenses).toFixed(2);
+            sheetData.push([rec.date, rec.services.toFixed(2), rec.product.toFixed(2), rec.expenses.toFixed(2), net, rec.image ? "Yes" : "No"]);
         });
         const ws = XLSX.utils.aoa_to_sheet(sheetData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Nabore_KES_Sales");
-        XLSX.writeFile(wb, `Nabore_Bookshop_KES_${new Date().toISOString().slice(0,19)}.xlsx`);
+        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Nabore_Sales");
+        XLSX.writeFile(wb, `Nabore_Bookshop_${new Date().toISOString().slice(0,19)}.xlsx`);
     }
 
-    // Set default date to today
     function setDefaultDate() {
         const today = new Date().toISOString().split('T')[0];
         const dateInput = document.getElementById('recordDate');
-        if (!dateInput.value) dateInput.value = today;
+        if(!dateInput.value) dateInput.value = today;
     }
 
-    // NO DEMO DATA — start completely empty
-    function ensureNoDemoData() {
-        // If there is any existing data from previous version, we keep it (user's own data)
-        // But we do NOT seed any test data. The app starts empty if first time.
-        // Just to be safe, we do nothing.
-        const records = getRecords();
-        // If no records exist, leave as is (empty). No demo injected.
-        if (records.length === 0) {
-            return; // keep empty
+    // Ensure no test data (starts empty)
+    function ensureEmptyStart() {
+        if(localStorage.getItem(STORAGE_KEY) === null) {
+            saveRecords([]);
+        } else {
+            // keep existing if any
         }
-        // otherwise keep user's existing data
     }
 
-    // Service Worker Registration for PWA
+    // Service Worker Registration
     function registerServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').then(reg => {
-                console.log('✅ Service Worker registered', reg);
-            }).catch(err => console.warn('⚠️ SW registration failed:', err));
+        if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(e=>console.log("SW not critical"));
         }
     }
 
-    // ---- EVENT LISTENERS ----
-    document.addEventListener('DOMContentLoaded', () => {
-        ensureNoDemoData();   // ensures no test data is ever added
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', ()=>{
+        ensureEmptyStart();
         setDefaultDate();
         refreshUI();
-        
-        document.getElementById('saveRecordBtn').addEventListener('click', handleSaveRecord);
+        document.getElementById('saveRecordBtn').addEventListener('click', saveRecordWithImage);
         document.getElementById('excelExportBtn').addEventListener('click', exportToExcel);
         document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
-        
+        const imageInput = document.getElementById('imageInput');
+        imageInput.addEventListener('change', (e) => {
+            if(e.target.files && e.target.files[0]) handleImageSelection(e.target.files[0]);
+            else { currentImageDataUrl = null; document.getElementById('imagePreviewArea').innerHTML = ''; }
+        });
         registerServiceWorker();
     });
 </script>
 
-<!-- PWA manifest & service worker scaffolding (ensures installability) -->
+<!-- PWA scaffolding (manifest & service worker pointers) -->
 <script>
-    (function ensurePWA() {
-        if (!document.querySelector('link[rel="manifest"]')) {
+    (function(){
+        if(!document.querySelector('link[rel="manifest"]')){
             const link = document.createElement('link');
-            link.rel = 'manifest';
-            link.href = 'manifest.json';
+            link.rel = 'manifest'; link.href = 'manifest.json';
             document.head.appendChild(link);
         }
-        if ('serviceWorker' in navigator) {
-            console.log("PWA ready: Kenyan Shilling edition | Entry form on top | No demo data");
-        }
+        console.log("Responsive PWA with image capture ready");
     })();
 </script>
 </body>
