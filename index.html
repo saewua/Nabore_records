@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#4169E1">
-    <title>Nabore Bookshop · Tabs: Sales, Dashboard, Stock</title>
+    <title>Nabore Bookshop · Tabs + Stock CSV Export</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,7 +18,6 @@
             line-height: 1.5;
         }
         .app-container { max-width: 1400px; margin: 0 auto; }
-        /* Tab Bar */
         .tabs {
             display: flex;
             flex-wrap: wrap;
@@ -44,7 +43,6 @@
         }
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
-        /* Cards & UI (reused from previous) */
         .card {
             background: #ffffff;
             border-radius: 1.5rem;
@@ -62,13 +60,44 @@
         .stat-card { padding: 1rem; }
         .stat-card h3 { font-size: 0.75rem; text-transform: uppercase; color: #5b6e8c; margin-bottom: 0.5rem; }
         .stat-value { font-size: 1.8rem; font-weight: 800; color: #0f2b3d; }
-        .form-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1rem; }
-        .input-group { flex: 1 1 160px; min-width: 130px; }
-        .input-group label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #4169E1; display: block; margin-bottom: 0.25rem; }
-        .input-group input, .input-group select { width: 100%; padding: 0.7rem 1rem; border-radius: 2rem; border: 1.5px solid #e2e8f0; background: #fff; }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+        }
+        .input-group {
+            flex: 1 1 160px;
+            min-width: 130px;
+        }
+        .input-group label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #4169E1;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border-radius: 2rem;
+            border: 1.5px solid #e2e8f0;
+            background: #fff;
+        }
         button {
-            background: #4169E1; border: none; border-radius: 2rem; padding: 0.6rem 1.2rem;
-            font-weight: 600; color: white; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
+            background: #4169E1;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
         }
         button:hover { background: #2b4fc7; transform: translateY(-1px); }
         .btn-outline { background: transparent; border: 1.5px solid #4169E1; color: #4169E1; }
@@ -81,8 +110,20 @@
         th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid #f0f2f5; }
         th { background: #f9fbfd; color: #1e3a8a; }
         .badge { background: #eef2ff; padding: 0.2rem 0.6rem; border-radius: 2rem; font-size: 0.7rem; }
-        .low-stock { background: #fee2e2; color: #b91c1c; }
-        .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #2b5e3b; color: white; padding: 0.7rem 1.5rem; border-radius: 3rem; z-index: 1000; opacity: 0; transition: 0.2s; pointer-events: none; }
+        .low-stock { background: #fee2e2; color: #b91c1c; font-weight: 500; }
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: #2b5e3b;
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 3rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+        }
         .toast.show { opacity: 1; }
         @media (max-width: 640px) { .stat-value { font-size: 1.4rem; } .tabs { justify-content: center; } }
     </style>
@@ -114,7 +155,7 @@
         <button class="tab-btn" data-tab="inventory">📦 Stock Inventory</button>
     </div>
 
-    <!-- Sales Tab (same as before) -->
+    <!-- Sales Tab -->
     <div id="salesTab" class="tab-pane active">
         <div class="card">
             <h3 style="color:#1e3a8a;">📝 Add / Edit daily sales (one record per date)</h3>
@@ -141,12 +182,12 @@
         <div class="table-wrapper" style="overflow-x:auto;">
             <table id="salesTable">
                 <thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th><th>Actions</th></tr></thead>
-                <tbody id="tableBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+                <tbody id="tableBody"><tr><td colspan="7">Loading......</td></tr></tbody>
             </table>
         </div>
     </div>
 
-    <!-- Dashboard Tab (charts & sales stats) -->
+    <!-- Dashboard Tab -->
     <div id="dashboardTab" class="tab-pane">
         <div class="filter-bar" style="margin-bottom:1rem;">
             <span>📊 Dashboard filters (sales):</span>
@@ -167,7 +208,7 @@
         </div>
     </div>
 
-    <!-- Inventory Tab -->
+    <!-- Inventory Tab with CSV export button -->
     <div id="inventoryTab" class="tab-pane">
         <div class="card">
             <h3 style="color:#1e3a8a;">📦 Manage Stock Items</h3>
@@ -181,6 +222,9 @@
                 <div class="input-group"><button id="cancelInvEdit" class="btn-outline">Cancel</button></div>
             </div>
             <p id="invEditId" style="font-size:0.7rem; color:#5b6e8c;"></p>
+            <div style="margin-top:1rem; display:flex; gap:0.8rem;">
+                <button id="exportInventoryCsvBtn" class="btn-outline">📎 Download Stock CSV</button>
+            </div>
         </div>
         <div class="table-wrapper">
             <table id="inventoryTable">
@@ -194,7 +238,7 @@
         </div>
     </div>
 
-    <footer style="text-align:center; font-size:0.7rem; margin-top:2rem; color:#6c86a3;">🔐 Firebase Auth • Real-time sync • Sales one per date • Stock management</footer>
+    <footer style="text-align:center; font-size:0.7rem; margin-top:2rem; color:#6c86a3;">🔐 Firebase Auth • Real-time sync • Sales one per date • Stock management with CSV export</footer>
 </div>
 </div>
 <div id="toast" class="toast">✓ Action completed</div>
@@ -204,8 +248,8 @@
     import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // ========== FIREBASE CONFIG (REPLACE WITH YOURS) ==========
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    // ========== 🔥 REPLACE WITH YOUR FIREBASE CONFIG ==========
+   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
@@ -222,7 +266,6 @@ const firebaseConfig = {
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // DOM elements
     const loginDiv = document.getElementById('loginContainer');
     const mainDiv = document.getElementById('mainContent');
     const authError = document.getElementById('authErrorMsg');
@@ -230,11 +273,10 @@ const firebaseConfig = {
     let allInventory = [];
     let editingInvId = null;
 
-    // UI helpers
     function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
     function formatKES(v) { return `KES ${v.toFixed(2)}`; }
 
-    // Auth
+    // AUTH
     onAuthStateChanged(auth, (user) => {
         if (user) { loginDiv.style.display = 'none'; mainDiv.style.display = 'block'; initApp(); }
         else { loginDiv.style.display = 'block'; mainDiv.style.display = 'none'; }
@@ -243,7 +285,7 @@ const firebaseConfig = {
     document.getElementById('signupBtn').onclick = async () => { try { await createUserWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); } catch(e) { authError.innerText=e.message; } };
     document.getElementById('logoutMainBtn').onclick = () => signOut(auth);
 
-    // Tab switching
+    // TAB SWITCHING
     const tabs = document.querySelectorAll('.tab-btn');
     const panes = { sales: document.getElementById('salesTab'), dashboard: document.getElementById('dashboardTab'), inventory: document.getElementById('inventoryTab') };
     tabs.forEach(btn => {
@@ -252,12 +294,12 @@ const firebaseConfig = {
             btn.classList.add('active');
             Object.values(panes).forEach(p => p.classList.remove('active'));
             panes[btn.dataset.tab].classList.add('active');
-            if (btn.dataset.tab === 'dashboard') updateDashboardCharts(); // refresh charts when shown
+            if (btn.dataset.tab === 'dashboard') updateDashboardCharts();
             if (btn.dataset.tab === 'inventory') renderInventory();
         });
     });
 
-    // ------------------ SALES LOGIC (unchanged, with print) ------------------
+    // ---------- SALES LOGIC (with print receipt) ----------
     let lineChart=null, barChart=null;
     function getWeekNumber(d){ const date=new Date(d); date.setHours(0,0,0); date.setDate(date.getDate()+3-(date.getDay()+6)%7); const week1=new Date(date.getFullYear(),0,4); return 1+Math.round(((date-week1)/86400000-3+(week1.getDay()+6)%7)/7); }
     let currYear="all", currMonth="all", currWeek="all";
@@ -277,7 +319,7 @@ const firebaseConfig = {
     document.getElementById('weekFilter').onchange=e=>{ currWeek=e.target.value; updateDashboardCharts(); renderSalesTable(); };
     document.getElementById('excelExportBtn').onclick=()=>{ const f=getFilteredSales(); if(!f.length){ alert("No data for filters"); return; } const sheet=[["Date","Services","Product","Expenses","Net","Has Image"]]; f.forEach(r=>sheet.push([r.date,r.services.toFixed(2),r.product.toFixed(2),r.expenses.toFixed(2),(r.services+r.product-r.expenses).toFixed(2),r.image?"Yes":"No"])); const ws=XLSX.utils.aoa_to_sheet(sheet); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Sales"); XLSX.writeFile(wb,`Nabore_Sales_${new Date().toISOString().slice(0,19)}.xlsx`); };
 
-    // ------------------ INVENTORY LOGIC ------------------
+    // ---------- INVENTORY LOGIC WITH CSV EXPORT ----------
     async function renderInventory(){
         const tbody=document.getElementById('invTableBody');
         if(!allInventory.length){ tbody.innerHTML='<tr><td colspan="5">No stock items</td></tr>'; document.getElementById('lowStockList').innerHTML='<p>No low stock items.</p>'; return; }
@@ -286,7 +328,7 @@ const firebaseConfig = {
         allInventory.forEach(item=>{
             const isLow = item.quantity <= item.lowThreshold;
             if(isLow) lowStockHtml+=`<li>${item.name} (${item.quantity} left, below ${item.lowThreshold})</li>`;
-            html+=`<tr><td>${item.name}</td><td class="${isLow?'low-stock':''}">${item.quantity}</td><td>${formatKES(item.price)}</td><td>${item.lowThreshold}</td>
+            html+=`<td>${item.name}</td><td class="${isLow?'low-stock':''}">${item.quantity}</td><td>${formatKES(item.price)}</td><td>${item.lowThreshold}</td>
             <td><button class="editInv" data-id="${item.id}">✏️</button> <button class="deleteInv" data-id="${item.id}" style="background:#b91c1c;">🗑️</button></td></tr>`;
         });
         lowStockHtml+='</ul>';
@@ -301,19 +343,38 @@ const firebaseConfig = {
     document.getElementById('cancelInvEdit').onclick=()=>{ clearInvForm(); };
     function clearInvForm(){ document.getElementById('invName').value=''; document.getElementById('invQty').value=0; document.getElementById('invPrice').value=0; document.getElementById('invThreshold').value=5; editingInvId=null; document.getElementById('invEditId').innerText=''; }
 
-    // Real-time listeners
+    // NEW: Export inventory to CSV
+    function exportInventoryToCSV() {
+        if (!allInventory.length) { alert("No inventory data to export."); return; }
+        const headers = ["Product Name", "Quantity", "Price (KES)", "Low Stock Threshold"];
+        const rows = allInventory.map(item => [item.name, item.quantity, item.price, item.lowThreshold]);
+        const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Nabore_Inventory_${new Date().toISOString().slice(0,19)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast("Inventory CSV exported");
+    }
+    document.getElementById('exportInventoryCsvBtn').onclick = exportInventoryToCSV;
+
+    // Dashboard filter sync
+    document.getElementById('dashYearFilter').innerHTML = '<option value="all">All Years</option>';
+    document.getElementById('dashMonthFilter').innerHTML = '<option value="all">All Months</option>';
+    document.getElementById('dashWeekFilter').innerHTML = '<option value="all">All Weeks</option>';
+    document.getElementById('dashYearFilter').onchange = (e)=>{ currYear=e.target.value; updateDashboardCharts(); };
+    document.getElementById('dashMonthFilter').onchange = (e)=>{ currMonth=e.target.value; updateDashboardCharts(); };
+    document.getElementById('dashWeekFilter').onchange = (e)=>{ currWeek=e.target.value; updateDashboardCharts(); };
+    document.getElementById('dashResetFilters').onclick = ()=>{ currYear="all"; currMonth="all"; currWeek="all"; updateFiltersUI(); updateDashboardCharts(); };
+
     function initApp(){
         onSnapshot(query(collection(db,"sales"),orderBy("date","asc")), (snap)=>{ allSales=[]; snap.forEach(d=>allSales.push({id:d.id,date:d.id,...d.data()})); updateFiltersUI(); renderSalesTable(); updateDashboardCharts(); });
         onSnapshot(collection(db,"inventory"), (snap)=>{ allInventory=[]; snap.forEach(d=>allInventory.push({id:d.id,...d.data()})); renderInventory(); });
-        // sync dashboard filters
-        document.getElementById('dashYearFilter').innerHTML = '<option value="all">All Years</option>';
-        document.getElementById('dashMonthFilter').innerHTML = '<option value="all">All Months</option>';
-        document.getElementById('dashWeekFilter').innerHTML = '<option value="all">All Weeks</option>';
-        document.getElementById('dashYearFilter').onchange = (e)=>{ currYear=e.target.value; updateDashboardCharts(); };
-        document.getElementById('dashMonthFilter').onchange = (e)=>{ currMonth=e.target.value; updateDashboardCharts(); };
-        document.getElementById('dashWeekFilter').onchange = (e)=>{ currWeek=e.target.value; updateDashboardCharts(); };
-        document.getElementById('dashResetFilters').onclick = ()=>{ currYear="all"; currMonth="all"; currWeek="all"; updateFiltersUI(); updateDashboardCharts(); };
-        setInterval(()=>{ if(document.querySelector('.tab-btn.active').dataset.tab === 'dashboard') updateDashboardCharts(); }, 1000);
+        document.getElementById('recordDate').valueAsDate = new Date();
     }
 </script>
 </body>
