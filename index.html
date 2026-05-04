@@ -4,715 +4,316 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#4169E1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Nabore Sales">
-    <link rel="manifest" href="manifest.json">
-    <title>Nabore Bookshop sale report</title>
+    <title>Nabore Bookshop · Tabs: Sales, Dashboard, Stock</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', system-ui, sans-serif;
             background: #ffffff;
             color: #1e293b;
-            padding: 1.5rem;
+            padding: 1.2rem;
             line-height: 1.5;
         }
         .app-container { max-width: 1400px; margin: 0 auto; }
+        /* Tab Bar */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            border-bottom: 2px solid #eef2f6;
+            margin-bottom: 2rem;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #5b6e8c;
+            cursor: pointer;
+            border-radius: 2rem 2rem 0 0;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            color: #4169E1;
+            border-bottom: 3px solid #4169E1;
+            background: #f8faff;
+        }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        /* Cards & UI (reused from previous) */
         .card {
             background: #ffffff;
             border-radius: 1.5rem;
             box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
             border: 1px solid #eef2f6;
-            transition: all 0.2s ease;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
         }
-        .card:hover { box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
-        .stat-card { padding: 1.25rem; }
-        .stat-card h3 {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 600;
-            color: #5b6e8c;
-            margin-bottom: 0.5rem;
-        }
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #0f2b3d;
-        }
-        .form-card { padding: 1.5rem; margin-bottom: 2rem; }
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            align-items: flex-end;
-        }
-        .input-group {
-            flex: 1 1 160px;
-            min-width: 130px;
-        }
-        .input-group label {
-            display: block;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #4169E1;
-            margin-bottom: 0.25rem;
-        }
-        .input-group input, .input-group select {
-            width: 100%;
-            padding: 0.7rem 1rem;
-            border-radius: 2rem;
-            border: 1.5px solid #e2e8f0;
-            background: #fff;
-            font-size: 0.9rem;
-            transition: 0.2s;
-        }
-        .input-group input:focus, .input-group select:focus {
-            outline: none;
-            border-color: #4169E1;
-            box-shadow: 0 0 0 3px rgba(65,105,225,0.2);
-        }
+        .stat-card { padding: 1rem; }
+        .stat-card h3 { font-size: 0.75rem; text-transform: uppercase; color: #5b6e8c; margin-bottom: 0.5rem; }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: #0f2b3d; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1rem; }
+        .input-group { flex: 1 1 160px; min-width: 130px; }
+        .input-group label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #4169E1; display: block; margin-bottom: 0.25rem; }
+        .input-group input, .input-group select { width: 100%; padding: 0.7rem 1rem; border-radius: 2rem; border: 1.5px solid #e2e8f0; background: #fff; }
         button {
-            background: #4169E1;
-            border: none;
-            border-radius: 2rem;
-            padding: 0.7rem 1.4rem;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: white;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
+            background: #4169E1; border: none; border-radius: 2rem; padding: 0.6rem 1.2rem;
+            font-weight: 600; color: white; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
         }
-        button:hover {
-            background: #2b4fc7;
-            transform: translateY(-1px);
-        }
-        .btn-outline {
-            background: transparent;
-            border: 1.5px solid #4169E1;
-            color: #4169E1;
-        }
-        .btn-outline:hover {
-            background: #eef3ff;
-            transform: none;
-        }
-        .btn-success { background: #2b5e3b; }
-        .btn-success:hover { background: #1f4529; }
-        .btn-warning { background: #dc843a; }
-        .btn-warning:hover { background: #b96a2a; }
-        .filter-bar {
-            background: #f8fafc;
-            border-radius: 3rem;
-            padding: 0.75rem 1.5rem;
-            margin-bottom: 2rem;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 1rem;
-            border: 1px solid #eef2f6;
-        }
-        .table-wrapper {
-            background: white;
-            border-radius: 1.5rem;
-            overflow-x: auto;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-            min-width: 640px;
-        }
-        th, td {
-            padding: 1rem 0.8rem;
-            text-align: left;
-            border-bottom: 1px solid #f0f2f5;
-        }
-        th {
-            background: #f9fbfd;
-            font-weight: 600;
-            color: #1e3a8a;
-        }
-        .table-img {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 10px;
-            cursor: pointer;
-            border: 1px solid #e2e8f0;
-        }
-        .edit-btn {
-            background: #eef3ff;
-            color: #4169E1;
-            border: none;
-            font-size: 0.75rem;
-            padding: 0.3rem 0.9rem;
-            border-radius: 2rem;
-            cursor: pointer;
-        }
-        .status-badge {
-            background: #eef2ff;
-            padding: 0.2rem 0.8rem;
-            border-radius: 2rem;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: #4169E1;
-        }
-        .toast {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            background: #1f4529;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 3rem;
-            font-size: 0.85rem;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
+        button:hover { background: #2b4fc7; transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 1.5px solid #4169E1; color: #4169E1; }
+        .btn-outline:hover { background: #eef3ff; transform: none; }
+        .btn-danger { background: #b91c1c; }
+        .btn-danger:hover { background: #991b1b; }
+        .btn-small { padding: 0.3rem 0.8rem; font-size: 0.75rem; }
+        .filter-bar { background: #f8fafc; border-radius: 3rem; padding: 0.5rem 1.2rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid #f0f2f5; }
+        th { background: #f9fbfd; color: #1e3a8a; }
+        .badge { background: #eef2ff; padding: 0.2rem 0.6rem; border-radius: 2rem; font-size: 0.7rem; }
+        .low-stock { background: #fee2e2; color: #b91c1c; }
+        .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #2b5e3b; color: white; padding: 0.7rem 1.5rem; border-radius: 3rem; z-index: 1000; opacity: 0; transition: 0.2s; pointer-events: none; }
         .toast.show { opacity: 1; }
-        .login-card {
-            max-width: 420px;
-            margin: 8vh auto;
-            padding: 2rem;
-            text-align: center;
-            background: white;
-            border-radius: 2rem;
-            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
-            border: 1px solid #eef2f6;
-        }
-        .login-card h2 { color: #1e3a8a; margin-bottom: 0.5rem; }
-        .login-card input {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            margin: 0.5rem 0;
-            border-radius: 2rem;
-            border: 1px solid #e2e8f0;
-        }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .mt-4 { margin-top: 1rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
-        .gap-2 { gap: 0.5rem; }
-        @media (max-width: 640px) {
-            body { padding: 1rem; }
-            .stat-value { font-size: 1.4rem; }
-        }
+        @media (max-width: 640px) { .stat-value { font-size: 1.4rem; } .tabs { justify-content: center; } }
     </style>
 </head>
 <body>
-
-<!-- LOGIN CONTAINER -->
-<div id="loginContainer" class="login-card">
-    <h2>🔐 Nabore Bookshop sales </h2>
-    <p style="color: #475569; margin-bottom: 1rem;">Sign in to manage sales</p>
-    <input type="email" id="loginEmail" placeholder="Email address" autocomplete="email">
-    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
-    <div style="display: flex; gap: 0.8rem; justify-content: center; margin-top: 1rem;">
+<div id="loginContainer" style="max-width:400px; margin:10vh auto; background:white; border-radius:2rem; padding:2rem; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+    <h2 style="color:#1e3a8a;">🔐 Nabore Bookshop</h2>
+    <p>Sign in to access sales & inventory</p>
+    <input type="email" id="loginEmail" placeholder="Email" style="width:100%; padding:0.8rem; margin:0.5rem 0; border-radius:2rem; border:1px solid #e2e8f0;">
+    <input type="password" id="loginPassword" placeholder="Password" style="width:100%; padding:0.8rem; margin:0.5rem 0; border-radius:2rem; border:1px solid #e2e8f0;">
+    <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem;">
         <button id="loginBtn">Sign In</button>
         <button id="signupBtn" class="btn-outline">Create Account</button>
     </div>
-    <div id="authErrorMsg" style="color: #b91c1c; font-size: 0.8rem; margin-top: 1rem;"></div>
+    <div id="authErrorMsg" style="color:#b91c1c; font-size:0.8rem; margin-top:1rem;"></div>
 </div>
 
-<!-- MAIN APP (hidden until authenticated) -->
-<div id="mainContent" style="display: none;">
+<div id="mainContent" style="display:none;">
 <div class="app-container">
-    <div class="flex-between" style="margin-bottom: 1.5rem;">
-        <h1 style="font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, #4169E1, #1e3a8a); background-clip: text; -webkit-background-clip: text; color: transparent;">📖 Nabore Bookshop</h1>
-        <button id="logoutMainBtn" class="btn-outline" style="padding: 0.5rem 1.2rem;">🚪 Logout</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h1 style="font-size:1.8rem; background:linear-gradient(135deg,#4169E1,#1e3a8a); background-clip:text; -webkit-background-clip:text; color:transparent;">📖 Nabore Bookshop</h1>
+        <button id="logoutMainBtn" class="btn-outline">🚪 Logout</button>
     </div>
 
-    <!-- Entry Form -->
-    <div class="card form-card">
-        <div class="flex-between" style="margin-bottom: 1rem;">
-            <h3 style="color: #1e3a8a;">📝 Add / Edit daily sales</h3>
-            <span id="recordStatus" class="status-badge">Ready</span>
-        </div>
-        <div class="form-row">
-            <div class="input-group"><label>📅 Date</label><input type="date" id="recordDate" required></div>
-            <div class="input-group"><label>💼 Services (KES)</label><input type="number" id="servicesInput" step="any" value="0"></div>
-            <div class="input-group"><label>📚 Product (KES)</label><input type="number" id="productInput" step="any" value="0"></div>
-            <div class="input-group"><label>🧾 Expenses (KES)</label><input type="number" id="expensesInput" step="any" value="0"></div>
-            <div class="input-group">
-                <label>📸 Record image </label>
-                <input type="file" id="imageInput" accept="image/*" capture="environment">
-                <div id="imagePreviewArea" style="margin-top: 0.5rem;"></div>
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="sales">📝 Sales Recording</button>
+        <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
+        <button class="tab-btn" data-tab="inventory">📦 Stock Inventory</button>
+    </div>
+
+    <!-- Sales Tab (same as before) -->
+    <div id="salesTab" class="tab-pane active">
+        <div class="card">
+            <h3 style="color:#1e3a8a;">📝 Add / Edit daily sales (one record per date)</h3>
+            <div class="form-row">
+                <div class="input-group"><label>Date</label><input type="date" id="recordDate"></div>
+                <div class="input-group"><label>Services (KES)</label><input type="number" id="servicesInput" step="any" value="0"></div>
+                <div class="input-group"><label>Product (KES)</label><input type="number" id="productInput" step="any" value="0"></div>
+                <div class="input-group"><label>Expenses (KES)</label><input type="number" id="expensesInput" step="any" value="0"></div>
+                <div class="input-group"><label>Receipt image</label><input type="file" id="imageInput" accept="image/*"></div>
+                <div class="input-group"><button id="saveNewBtn" style="background:#2b5e3b;">➕ Save as New</button></div>
+                <div class="input-group"><button id="updateExistingBtn" style="background:#dc843a;">✏️ Update Existing</button></div>
             </div>
-            <div class="input-group"><button id="saveNewBtn" class="btn-success">➕ Save New</button></div>
-            <div class="input-group"><button id="updateExistingBtn" class="btn-warning">✏️ Update Existing</button></div>
+            <div id="imagePreviewArea" style="margin-top:0.5rem;"></div>
+            <p class="status-badge" id="recordStatus" style="display:inline-block; margin-top:0.5rem;">Ready</p>
         </div>
-        <p style="font-size: 0.7rem; color: #5b6e8c; margin-top: 1rem;">⚠️ "Save New" will overwrite if date exists. "Update" works only for existing records. One record per date.</p>
+        <div class="filter-bar">
+            <span>Sales filters:</span>
+            <select id="yearFilter"><option value="all">All Years</option></select>
+            <select id="monthFilter"><option value="all">All Months</option></select>
+            <select id="weekFilter"><option value="all">All Weeks</option></select>
+            <button id="resetFiltersBtn" class="btn-outline">⟳ Reset</button>
+            <button id="excelExportBtn" class="btn-outline">📎 Export Excel</button>
+        </div>
+        <div class="table-wrapper" style="overflow-x:auto;">
+            <table id="salesTable">
+                <thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th><th>Actions</th></tr></thead>
+                <tbody id="tableBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- Filters & Export -->
-    <div class="filter-bar">
-        <span>📊 Dashboard filters:</span>
-        <select id="yearFilter" style="width: auto;"><option value="all">All Years</option></select>
-        <select id="monthFilter" style="width: auto;"><option value="all">All Months</option></select>
-        <select id="weekFilter" style="width: auto;"><option value="all">All Weeks</option></select>
-        <button id="resetFiltersBtn" class="btn-outline">⟳ Reset</button>
-        <button id="excelExportBtn" class="btn-outline">📎 Export Excel (filtered)</button>
+    <!-- Dashboard Tab (charts & sales stats) -->
+    <div id="dashboardTab" class="tab-pane">
+        <div class="filter-bar" style="margin-bottom:1rem;">
+            <span>📊 Dashboard filters (sales):</span>
+            <select id="dashYearFilter"><option value="all">All Years</option></select>
+            <select id="dashMonthFilter"><option value="all">All Months</option></select>
+            <select id="dashWeekFilter"><option value="all">All Weeks</option></select>
+            <button id="dashResetFilters" class="btn-outline">Reset</button>
+        </div>
+        <div class="dashboard-grid" id="dashboardStats">
+            <div class="card stat-card"><h3>Total Services</h3><div class="stat-value" id="totalServices">KES 0.00</div></div>
+            <div class="card stat-card"><h3>Total Product</h3><div class="stat-value" id="totalProducts">KES 0.00</div></div>
+            <div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="totalExpenses">KES 0.00</div></div>
+            <div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="netProfit">KES 0.00</div></div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(400px,1fr)); gap:1.5rem;">
+            <div class="card"><h3 style="color:#1e3a8a;">📈 Daily Trends (Line)</h3><canvas id="salesLineChart" style="max-height:280px;"></canvas></div>
+            <div class="card"><h3 style="color:#1e3a8a;">📊 Net Profit per Day (Bar)</h3><canvas id="netProfitBarChart" style="max-height:280px;"></canvas></div>
+        </div>
     </div>
 
-    <!-- Dashboard Stats -->
-    <div class="dashboard-grid">
-        <div class="card stat-card"><h3>Total Services</h3><div class="stat-value" id="totalServices">KES 0.00</div></div>
-        <div class="card stat-card"><h3>Total Product</h3><div class="stat-value" id="totalProducts">KES 0.00</div></div>
-        <div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="totalExpenses">KES 0.00</div></div>
-        <div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="netProfit">KES 0.00</div></div>
+    <!-- Inventory Tab -->
+    <div id="inventoryTab" class="tab-pane">
+        <div class="card">
+            <h3 style="color:#1e3a8a;">📦 Manage Stock Items</h3>
+            <div class="form-row">
+                <div class="input-group"><label>Product Name</label><input type="text" id="invName" placeholder="e.g., Exercise Book"></div>
+                <div class="input-group"><label>Quantity</label><input type="number" id="invQty" value="0"></div>
+                <div class="input-group"><label>Price (KES)</label><input type="number" id="invPrice" step="any" value="0"></div>
+                <div class="input-group"><label>Low Stock Threshold</label><input type="number" id="invThreshold" value="5"></div>
+                <div class="input-group"><button id="addInventoryBtn">➕ Add Item</button></div>
+                <div class="input-group"><button id="updateInventoryBtn" style="background:#dc843a;">✏️ Update</button></div>
+                <div class="input-group"><button id="cancelInvEdit" class="btn-outline">Cancel</button></div>
+            </div>
+            <p id="invEditId" style="font-size:0.7rem; color:#5b6e8c;"></p>
+        </div>
+        <div class="table-wrapper">
+            <table id="inventoryTable">
+                <thead><tr><th>Name</th><th>Quantity</th><th>Price (KES)</th><th>Low Stock</th><th>Actions</th></tr></thead>
+                <tbody id="invTableBody"><tr><td colspan="5">Loading inventory...</td></tr></tbody>
+            </table>
+        </div>
+        <div class="card" style="margin-top:1rem;">
+            <h4 style="color:#1e3a8a;">⚠️ Low Stock Alerts</h4>
+            <div id="lowStockList"></div>
+        </div>
     </div>
 
-    <!-- Charts - Modernized -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-        <div class="card" style="padding: 1rem;"><h3 style="color:#1e3a8a; margin-bottom: 0.75rem;">📈 Daily Trends (Line)</h3><canvas id="salesLineChart" style="max-height: 280px;"></canvas></div>
-        <div class="card" style="padding: 1rem;"><h3 style="color:#1e3a8a; margin-bottom: 0.75rem;">📊 Net Profit per Day (Bar)</h3><canvas id="netProfitBarChart" style="max-height: 280px;"></canvas></div>
-    </div>
-
-    <!-- Records Table -->
-    <div class="table-wrapper">
-        <table id="salesTable">
-            <thead><tr><th>Date</th><th>Services (KES)</th><th>Product (KES)</th><th>Expenses (KES)</th><th>Net (KES)</th><th>Image</th><th>Edit</th></thead>
-            <tbody id="tableBody"><td><td colspan="7" style="text-align:center;">Loading sales data...</td></tr></tbody>
-         </table>
-    </div>
-    <footer style="text-align: center; font-size: 0.7rem; margin-top: 2rem; color: #6c86a3;">🔐 @ Nabore 2026, Build by Saewua, Hosted on Github </footer>
+    <footer style="text-align:center; font-size:0.7rem; margin-top:2rem; color:#6c86a3;">🔐 Firebase Auth • Real-time sync • Sales one per date • Stock management</footer>
 </div>
 </div>
-
-<div id="toast" class="toast">✓ Success</div>
+<div id="toast" class="toast">✓ Action completed</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // 🔥 REPLACE WITH YOUR FIREBASE CONFIGURATION
-    const firebaseConfig = {
+    // ========== FIREBASE CONFIG (REPLACE WITH YOURS) ==========
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
   databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "nabore-bookshop",
   storageBucket: "nabore-bookshop.firebasestorage.app",
   messagingSenderId: "619207980890",
-  appId: "1:619207980890:web:c680907f519b3d6efa2563"
+  appId: "1:619207980890:web:c680907f519b3d6efa2563",
+  measurementId: "G-YKNGLT2VLT"
 };
+    // ============================================================
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    // DOM elements
     const loginDiv = document.getElementById('loginContainer');
     const mainDiv = document.getElementById('mainContent');
     const authError = document.getElementById('authErrorMsg');
+    let allSales = [];
+    let allInventory = [];
+    let editingInvId = null;
 
-    let allRecords = [];
-    let lineChart = null, barChart = null;
-    let currentImageDataUrl = null;
-
+    // UI helpers
+    function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
     function formatKES(v) { return `KES ${v.toFixed(2)}`; }
-    function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
 
+    // Auth
     onAuthStateChanged(auth, (user) => {
-        if (user) {
-            loginDiv.style.display = 'none';
-            mainDiv.style.display = 'block';
-            initApp();
-        } else {
-            loginDiv.style.display = 'block';
-            mainDiv.style.display = 'none';
-        }
+        if (user) { loginDiv.style.display = 'none'; mainDiv.style.display = 'block'; initApp(); }
+        else { loginDiv.style.display = 'block'; mainDiv.style.display = 'none'; }
+    });
+    document.getElementById('loginBtn').onclick = async () => { try { await signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); authError.innerText=''; } catch(e) { authError.innerText=e.message; } };
+    document.getElementById('signupBtn').onclick = async () => { try { await createUserWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); } catch(e) { authError.innerText=e.message; } };
+    document.getElementById('logoutMainBtn').onclick = () => signOut(auth);
+
+    // Tab switching
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = { sales: document.getElementById('salesTab'), dashboard: document.getElementById('dashboardTab'), inventory: document.getElementById('inventoryTab') };
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            Object.values(panes).forEach(p => p.classList.remove('active'));
+            panes[btn.dataset.tab].classList.add('active');
+            if (btn.dataset.tab === 'dashboard') updateDashboardCharts(); // refresh charts when shown
+            if (btn.dataset.tab === 'inventory') renderInventory();
+        });
     });
 
-    document.getElementById('loginBtn').onclick = async () => {
-        const email = document.getElementById('loginEmail').value;
-        const pwd = document.getElementById('loginPassword').value;
-        try {
-            await signInWithEmailAndPassword(auth, email, pwd);
-            authError.innerText = '';
-        } catch (err) {
-            if (err.code === 'auth/configuration-not-found') authError.innerText = '⚠️ Enable Email/Password in Firebase Console → Authentication.';
-            else authError.innerText = err.message;
-        }
-    };
-    document.getElementById('signupBtn').onclick = async () => {
-        const email = document.getElementById('loginEmail').value;
-        const pwd = document.getElementById('loginPassword').value;
-        try {
-            await createUserWithEmailAndPassword(auth, email, pwd);
-            authError.innerText = '';
-        } catch (err) {
-            if (err.code === 'auth/configuration-not-found') authError.innerText = '⚠️ Enable Email/Password first.';
-            else authError.innerText = err.message;
-        }
-    };
-    document.getElementById('logoutMainBtn')?.addEventListener('click', () => signOut(auth));
+    // ------------------ SALES LOGIC (unchanged, with print) ------------------
+    let lineChart=null, barChart=null;
+    function getWeekNumber(d){ const date=new Date(d); date.setHours(0,0,0); date.setDate(date.getDate()+3-(date.getDay()+6)%7); const week1=new Date(date.getFullYear(),0,4); return 1+Math.round(((date-week1)/86400000-3+(week1.getDay()+6)%7)/7); }
+    let currYear="all", currMonth="all", currWeek="all";
+    function getFilteredSales(){ let f=[...allSales]; if(currYear!=="all") f=f.filter(r=>r.date.startsWith(currYear)); if(currMonth!=="all") f=f.filter(r=>new Date(r.date).getMonth()+1===parseInt(currMonth)); if(currWeek!=="all") f=f.filter(r=>getWeekNumber(r.date).toString()===currWeek); return f; }
+    function updateFiltersUI(){ const years=[...new Set(allSales.map(r=>r.date.split('-')[0]))].sort(); const ySel=document.getElementById('yearFilter'); ySel.innerHTML='<option value="all">All Years</option>'; years.forEach(y=>ySel.innerHTML+=`<option value="${y}">${y}</option>`); ySel.value=currYear; const mSel=document.getElementById('monthFilter'); mSel.innerHTML='<option value="all">All Months</option>'; for(let i=1;i<=12;i++) mSel.innerHTML+=`<option value="${i}">${i}</option>`; mSel.value=currMonth; const weeks=[...new Set(allSales.map(r=>getWeekNumber(r.date)))].sort((a,b)=>a-b); const wSel=document.getElementById('weekFilter'); wSel.innerHTML='<option value="all">All Weeks</option>'; weeks.forEach(w=>wSel.innerHTML+=`<option value="${w}">Week ${w}</option>`); wSel.value=currWeek; }
+    async function printReceipt(rec){ const net=rec.services+rec.product-rec.expenses; const win=window.open('','_blank'); win.document.write(`<html><head><title>Receipt ${rec.date}</title><style>body{font-family:Inter;padding:20px;max-width:400px;margin:auto;}</style></head><body><div style="text-align:center"><h2>Nabore Bookshop</h2><hr><p><strong>${rec.date}</strong></p><p>Services: ${formatKES(rec.services)}</p><p>Product: ${formatKES(rec.product)}</p><p>Expenses: ${formatKES(rec.expenses)}</p><p><strong>Net: ${formatKES(net)}</strong></p>${rec.image?`<img src="${rec.image}" style="max-width:200px;">`:''}<hr><p>Thank you!</p></div></body></html>`); win.document.close(); win.print(); }
+    function renderSalesTable(){ const tbody=document.getElementById('tableBody'); if(!allSales.length){ tbody.innerHTML='<tr><td colspan="7">✨ No sales yet</td></tr>'; return; } let html=''; allSales.forEach(rec=>{ const net=rec.services+rec.product-rec.expenses; const img=rec.image?`<img src="${rec.image}" style="width:40px;height:40px;border-radius:8px;" onclick="window.open('${rec.image}','_blank')">`:'—'; html+=`<tr><td>${rec.date}</td><td>${formatKES(rec.services)}</td><td>${formatKES(rec.product)}</td><td>${formatKES(rec.expenses)}</td><td>${formatKES(net)}</td><td>${img}</td><td><button class="edit-btn" data-date="${rec.date}" style="background:#eef3ff;border:none;border-radius:2rem;padding:0.2rem 0.8rem;">✏️ Edit</button> <button class="print-btn" data-date="${rec.date}" data-services="${rec.services}" data-product="${rec.product}" data-expenses="${rec.expenses}" data-image="${rec.image||''}" style="background:#e9ecef;border:none;border-radius:2rem;padding:0.2rem 0.8rem;">🖨️ Print</button></td></tr>`; }); tbody.innerHTML=html; document.querySelectorAll('.edit-btn').forEach(btn=>btn.addEventListener('click',()=>loadDateForEdit(btn.dataset.date))); document.querySelectorAll('.print-btn').forEach(btn=>btn.addEventListener('click',()=>printReceipt({date:btn.dataset.date,services:parseFloat(btn.dataset.services),product:parseFloat(btn.dataset.product),expenses:parseFloat(btn.dataset.expenses),image:btn.dataset.image||null}))); }
+    async function loadDateForEdit(date){ const snap=await getDoc(doc(db,"sales",date)); if(snap.exists()){ const d=snap.data(); document.getElementById('recordDate').value=date; document.getElementById('servicesInput').value=d.services; document.getElementById('productInput').value=d.product; document.getElementById('expensesInput').value=d.expenses; currentImageDataUrl=d.image||null; document.getElementById('imagePreviewArea').innerHTML=d.image?`<img src="${d.image}" style="width:60px;"><button id="clearTemp">Remove</button>`:''; document.getElementById('clearTemp')?.addEventListener('click',()=>{ document.getElementById('imagePreviewArea').innerHTML=''; currentImageDataUrl=null; }); document.getElementById('recordStatus').innerText='Editing existing'; } else { document.getElementById('recordDate').value=date; document.getElementById('servicesInput').value=0; document.getElementById('productInput').value=0; document.getElementById('expensesInput').value=0; document.getElementById('imagePreviewArea').innerHTML=''; currentImageDataUrl=null; document.getElementById('recordStatus').innerText='New date'; } }
+    let currentImageDataUrl=null;
+    document.getElementById('imageInput').onchange=e=>{ if(e.target.files[0]){ const r=new FileReader(); r.onload=ev=>{ currentImageDataUrl=ev.target.result; document.getElementById('imagePreviewArea').innerHTML=`<img src="${currentImageDataUrl}" style="width:60px;"><button id="clearImg">Remove</button>`; document.getElementById('clearImg')?.addEventListener('click',()=>{ document.getElementById('imagePreviewArea').innerHTML=''; currentImageDataUrl=null; }); }; r.readAsDataURL(e.target.files[0]); } else { currentImageDataUrl=null; document.getElementById('imagePreviewArea').innerHTML=''; } };
+    document.getElementById('saveNewBtn').onclick=async()=>{ const date=document.getElementById('recordDate').value; if(!date) return; const exists=await getDoc(doc(db,"sales",date)).then(s=>s.exists()); if(exists && !confirm(`Overwrite ${date}?`)) return; const svc=parseFloat(document.getElementById('servicesInput').value)||0, prd=parseFloat(document.getElementById('productInput').value)||0, exp=parseFloat(document.getElementById('expensesInput').value)||0; await setDoc(doc(db,"sales",date),{date,services:svc,product:prd,expenses:exp,image:currentImageDataUrl||null,updatedAt:new Date().toISOString()}); showToast("Saved"); };
+    document.getElementById('updateExistingBtn').onclick=async()=>{ const date=document.getElementById('recordDate').value; if(!date) return; const exists=await getDoc(doc(db,"sales",date)).then(s=>s.exists()); if(!exists){ alert("No record. Use Save as New."); return; } const svc=parseFloat(document.getElementById('servicesInput').value)||0, prd=parseFloat(document.getElementById('productInput').value)||0, exp=parseFloat(document.getElementById('expensesInput').value)||0; await setDoc(doc(db,"sales",date),{date,services:svc,product:prd,expenses:exp,image:currentImageDataUrl||null,updatedAt:new Date().toISOString()},{merge:true}); showToast("Updated"); };
+    function updateDashboardCharts(){ const filtered=getFilteredSales(); let ts=0,tp=0,te=0; filtered.forEach(r=>{ ts+=r.services; tp+=r.product; te+=r.expenses; }); const net=ts+tp-te; document.getElementById('totalServices').innerHTML=formatKES(ts); document.getElementById('totalProducts').innerHTML=formatKES(tp); document.getElementById('totalExpenses').innerHTML=formatKES(te); document.getElementById('netProfit').innerHTML=formatKES(net); const labels=filtered.map(r=>r.date), svcD=filtered.map(r=>r.services), prdD=filtered.map(r=>r.product), expD=filtered.map(r=>r.expenses), netD=filtered.map(r=>r.services+r.product-r.expenses); if(lineChart)lineChart.destroy(); if(barChart)barChart.destroy(); const ctxL=document.getElementById('salesLineChart').getContext('2d'), ctxB=document.getElementById('netProfitBarChart').getContext('2d'); if(labels.length){ lineChart=new Chart(ctxL,{type:'line',data:{labels,datasets:[{label:'Services',data:svcD,borderColor:'#2ecc71',tension:0.3,fill:true},{label:'Product',data:prdD,borderColor:'#3498db',tension:0.3},{label:'Expenses',data:expD,borderColor:'#e67e22',tension:0.3}]},options:{responsive:true}}); barChart=new Chart(ctxB,{type:'bar',data:{labels,datasets:[{label:'Net Profit',data:netD,backgroundColor:'#4169E1',borderRadius:12}]}}); } else { lineChart=new Chart(ctxL,{type:'line',data:{labels:['No data'],datasets:[]}}); barChart=new Chart(ctxB,{type:'bar',data:{labels:['No data'],datasets:[]}}); } }
+    document.getElementById('resetFiltersBtn').onclick=()=>{ currYear="all"; currMonth="all"; currWeek="all"; updateFiltersUI(); updateDashboardCharts(); renderSalesTable(); };
+    document.getElementById('yearFilter').onchange=e=>{ currYear=e.target.value; updateDashboardCharts(); renderSalesTable(); };
+    document.getElementById('monthFilter').onchange=e=>{ currMonth=e.target.value; updateDashboardCharts(); renderSalesTable(); };
+    document.getElementById('weekFilter').onchange=e=>{ currWeek=e.target.value; updateDashboardCharts(); renderSalesTable(); };
+    document.getElementById('excelExportBtn').onclick=()=>{ const f=getFilteredSales(); if(!f.length){ alert("No data for filters"); return; } const sheet=[["Date","Services","Product","Expenses","Net","Has Image"]]; f.forEach(r=>sheet.push([r.date,r.services.toFixed(2),r.product.toFixed(2),r.expenses.toFixed(2),(r.services+r.product-r.expenses).toFixed(2),r.image?"Yes":"No"])); const ws=XLSX.utils.aoa_to_sheet(sheet); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Sales"); XLSX.writeFile(wb,`Nabore_Sales_${new Date().toISOString().slice(0,19)}.xlsx`); };
 
-    function getWeekNumber(dateStr) {
-        const d = new Date(dateStr);
-        d.setHours(0,0,0);
-        d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-        const week1 = new Date(d.getFullYear(), 0, 4);
-        return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-    }
-
-    let currYear = "all", currMonth = "all", currWeek = "all";
-
-    function getFilteredRecords() {
-        let filtered = [...allRecords];
-        if(currYear !== "all") filtered = filtered.filter(r => r.date.startsWith(currYear));
-        if(currMonth !== "all") filtered = filtered.filter(r => new Date(r.date).getMonth() + 1 === parseInt(currMonth));
-        if(currWeek !== "all") filtered = filtered.filter(r => getWeekNumber(r.date).toString() === currWeek);
-        return filtered;
-    }
-
-    function updateFiltersUI() {
-        const years = [...new Set(allRecords.map(r => r.date.split('-')[0]))].sort();
-        const ySel = document.getElementById('yearFilter');
-        ySel.innerHTML = '<option value="all">All Years</option>';
-        years.forEach(y => ySel.innerHTML += `<option value="${y}">${y}</option>`);
-        ySel.value = currYear;
-        const mSel = document.getElementById('monthFilter');
-        mSel.innerHTML = '<option value="all">All Months</option>';
-        for(let i=1;i<=12;i++) mSel.innerHTML += `<option value="${i}">${i}</option>`;
-        mSel.value = currMonth;
-        const weeks = [...new Set(allRecords.map(r => getWeekNumber(r.date)))].sort((a,b)=>a-b);
-        const wSel = document.getElementById('weekFilter');
-        wSel.innerHTML = '<option value="all">All Weeks</option>';
-        weeks.forEach(w => wSel.innerHTML += `<option value="${w}">Week ${w}</option>`);
-        wSel.value = currWeek;
-    }
-
-    function renderTable() {
-        const tbody = document.getElementById('tableBody');
-        if(!allRecords.length) { tbody.innerHTML = '<tr><td colspan="7">✨ No sales yet. Add your first record above.✨</td></tr>'; return; }
-        let html = '';
-        allRecords.forEach(rec => {
-            const net = rec.services + rec.product - rec.expenses;
-            const imgHtml = rec.image ? `<img src="${rec.image}" class="table-img" onclick="window.open('${rec.image}','_blank')">` : '—';
-            html += `<tr>
-                        <td>${rec.date}</td>
-                        <td>${formatKES(rec.services)}</td>
-                        <td>${formatKES(rec.product)}</td>
-                        <td>${formatKES(rec.expenses)}</td>
-                        <td>${formatKES(net)}</td>
-                        <td>${imgHtml}</td>
-                        <td><button class="edit-btn" data-date="${rec.date}">✏️ Edit</button></td>
-                     </tr>`;
+    // ------------------ INVENTORY LOGIC ------------------
+    async function renderInventory(){
+        const tbody=document.getElementById('invTableBody');
+        if(!allInventory.length){ tbody.innerHTML='<tr><td colspan="5">No stock items</td></tr>'; document.getElementById('lowStockList').innerHTML='<p>No low stock items.</p>'; return; }
+        let html='';
+        let lowStockHtml='<ul>';
+        allInventory.forEach(item=>{
+            const isLow = item.quantity <= item.lowThreshold;
+            if(isLow) lowStockHtml+=`<li>${item.name} (${item.quantity} left, below ${item.lowThreshold})</li>`;
+            html+=`<tr><td>${item.name}</td><td class="${isLow?'low-stock':''}">${item.quantity}</td><td>${formatKES(item.price)}</td><td>${item.lowThreshold}</td>
+            <td><button class="editInv" data-id="${item.id}">✏️</button> <button class="deleteInv" data-id="${item.id}" style="background:#b91c1c;">🗑️</button></td></tr>`;
         });
-        tbody.innerHTML = html;
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', () => loadDateForEdit(btn.dataset.date));
-        });
+        lowStockHtml+='</ul>';
+        tbody.innerHTML=html;
+        document.getElementById('lowStockList').innerHTML = lowStockHtml;
+        document.querySelectorAll('.editInv').forEach(btn=>btn.addEventListener('click',()=>editInventory(btn.dataset.id)));
+        document.querySelectorAll('.deleteInv').forEach(btn=>btn.addEventListener('click',async()=>{ if(confirm("Delete item?")) await deleteDoc(doc(db,"inventory",btn.dataset.id)); }));
     }
+    async function editInventory(id){ const item=allInventory.find(i=>i.id===id); if(item){ editingInvId=id; document.getElementById('invName').value=item.name; document.getElementById('invQty').value=item.quantity; document.getElementById('invPrice').value=item.price; document.getElementById('invThreshold').value=item.lowThreshold; document.getElementById('invEditId').innerText=`Editing: ${item.name}`; } }
+    document.getElementById('addInventoryBtn').onclick=async()=>{ const name=document.getElementById('invName').value.trim(); if(!name){ alert("Product name required"); return; } const qty=parseInt(document.getElementById('invQty').value)||0; const price=parseFloat(document.getElementById('invPrice').value)||0; const thresh=parseInt(document.getElementById('invThreshold').value)||5; await addDoc(collection(db,"inventory"),{name,quantity:qty,price,lowThreshold:thresh,createdAt:new Date()}); showToast("Item added"); clearInvForm(); };
+    document.getElementById('updateInventoryBtn').onclick=async()=>{ if(!editingInvId){ alert("No item selected for update. Click Edit first."); return; } const name=document.getElementById('invName').value.trim(); if(!name) return; const qty=parseInt(document.getElementById('invQty').value)||0; const price=parseFloat(document.getElementById('invPrice').value)||0; const thresh=parseInt(document.getElementById('invThreshold').value)||5; await updateDoc(doc(db,"inventory",editingInvId),{name,quantity:qty,price,lowThreshold:thresh,updatedAt:new Date()}); showToast("Item updated"); clearInvForm(); };
+    document.getElementById('cancelInvEdit').onclick=()=>{ clearInvForm(); };
+    function clearInvForm(){ document.getElementById('invName').value=''; document.getElementById('invQty').value=0; document.getElementById('invPrice').value=0; document.getElementById('invThreshold').value=5; editingInvId=null; document.getElementById('invEditId').innerText=''; }
 
-    // MODERNIZED CHARTS - Line & Bar with green services, smooth curves, rounded bars, modern tooltips
-    function updateDashboardAndCharts() {
-        const filtered = getFilteredRecords();
-        let totalServices=0, totalProducts=0, totalExpenses=0;
-        filtered.forEach(r => { totalServices+=r.services; totalProducts+=r.product; totalExpenses+=r.expenses; });
-        const netTotal = totalServices+totalProducts-totalExpenses;
-        document.getElementById('totalServices').innerHTML = formatKES(totalServices);
-        document.getElementById('totalProducts').innerHTML = formatKES(totalProducts);
-        document.getElementById('totalExpenses').innerHTML = formatKES(totalExpenses);
-        document.getElementById('netProfit').innerHTML = formatKES(netTotal);
-
-        const labels = filtered.map(r=>r.date);
-        const servicesData = filtered.map(r=>r.services);
-        const productsData = filtered.map(r=>r.product);
-        const expensesData = filtered.map(r=>r.expenses);
-        const netData = filtered.map(r=>r.services+r.product-r.expenses);
-
-        if(lineChart) lineChart.destroy();
-        if(barChart) barChart.destroy();
-
-        const ctxLine = document.getElementById('salesLineChart').getContext('2d');
-        const ctxBar = document.getElementById('netProfitBarChart').getContext('2d');
-
-        // Modern Line Chart
-        if(labels.length) {
-            lineChart = new Chart(ctxLine, {
-                type: 'line',
-                data: { 
-                    labels, 
-                    datasets: [
-                        { 
-                            label: 'Services (KES)', 
-                            data: servicesData, 
-                            borderColor: '#2ecc71',          // modern green
-                            backgroundColor: 'rgba(46, 204, 113, 0.08)',
-                            borderWidth: 3,
-                            pointRadius: 4,
-                            pointHoverRadius: 7,
-                            pointBackgroundColor: '#2ecc71',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            tension: 0.3,
-                            fill: true
-                        },
-                        { 
-                            label: 'Product (KES)', 
-                            data: productsData, 
-                            borderColor: '#3498db',          // vibrant blue
-                            backgroundColor: 'rgba(52, 152, 219, 0.08)',
-                            borderWidth: 3,
-                            pointRadius: 4,
-                            pointHoverRadius: 7,
-                            pointBackgroundColor: '#3498db',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            tension: 0.3,
-                            fill: true
-                        },
-                        { 
-                            label: 'Expenses (KES)', 
-                            data: expensesData, 
-                            borderColor: '#e67e22',          // warm orange
-                            backgroundColor: 'rgba(230, 126, 34, 0.08)',
-                            borderWidth: 3,
-                            pointRadius: 4,
-                            pointHoverRadius: 7,
-                            pointBackgroundColor: '#e67e22',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            tension: 0.3,
-                            fill: true
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: '#1e293b',
-                            titleColor: '#f1f5f9',
-                            bodyColor: '#cbd5e1',
-                            borderColor: '#4169E1',
-                            borderWidth: 1,
-                            padding: 10,
-                            callbacks: {
-                                label: (ctx) => `${ctx.dataset.label}: KES ${ctx.raw.toFixed(2)}`
-                            }
-                        },
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                usePointStyle: true,
-                                boxWidth: 8,
-                                font: { family: 'Inter, system-ui', size: 12 }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#e9ecef', drawBorder: false },
-                            title: { display: true, text: 'Amount (KES)', font: { weight: '500', size: 12 }, color: '#5b6e8c' },
-                            ticks: { callback: (v) => 'KES ' + v.toFixed(0), color: '#475569' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { maxRotation: 35, autoSkip: true, color: '#475569' }
-                        }
-                    },
-                    elements: {
-                        line: { borderJoin: 'round' },
-                        point: { hoverBorderWidth: 3 }
-                    }
-                }
-            });
-
-            // Modern Bar Chart
-            barChart = new Chart(ctxBar, {
-                type: 'bar',
-                data: { 
-                    labels, 
-                    datasets: [
-                        { 
-                            label: 'Net Profit (KES)', 
-                            data: netData, 
-                            backgroundColor: '#4169E1',      // royal blue
-                            borderRadius: 12,
-                            barPercentage: 0.65,
-                            categoryPercentage: 0.8,
-                            hoverBackgroundColor: '#2b4fc7'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        tooltip: {
-                            backgroundColor: '#1e293b',
-                            titleColor: '#f1f5f9',
-                            bodyColor: '#cbd5e1',
-                            borderColor: '#4169E1',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: (ctx) => `KES ${ctx.raw.toFixed(2)}`
-                            }
-                        },
-                        legend: {
-                            position: 'top',
-                            labels: { usePointStyle: true, font: { family: 'Inter, system-ui', size: 12 } }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#e9ecef' },
-                            title: { display: true, text: 'Net Profit (KES)', font: { weight: '500' }, color: '#5b6e8c' },
-                            ticks: { callback: (v) => 'KES ' + v.toFixed(0), color: '#475569' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#475569' }
-                        }
-                    }
-                }
-            });
-        } else {
-            // empty states
-            lineChart = new Chart(ctxLine, { type: 'line', data: { labels: ['No data'], datasets: [] } });
-            barChart = new Chart(ctxBar, { type: 'bar', data: { labels: ['No data'], datasets: [] } });
-        }
-    }
-
-    async function loadDateForEdit(date) {
-        const docRef = doc(db, "sales", date);
-        const snap = await getDoc(docRef);
-        if(snap.exists()) {
-            const data = snap.data();
-            document.getElementById('recordDate').value = date;
-            document.getElementById('servicesInput').value = data.services;
-            document.getElementById('productInput').value = data.product;
-            document.getElementById('expensesInput').value = data.expenses;
-            const previewDiv = document.getElementById('imagePreviewArea');
-            if(data.image) {
-                previewDiv.innerHTML = `<img src="${data.image}" style="width:60px;height:60px;border-radius:12px;"><button id="clearTempImageBtn" style="background:#4169E1;color:white;border:none;border-radius:30px;padding:4px 12px;margin-left:8px;">Remove</button>`;
-                document.getElementById('clearTempImageBtn')?.addEventListener('click', () => {
-                    previewDiv.innerHTML = '';
-                    currentImageDataUrl = null;
-                    document.getElementById('imageInput').value = '';
-                });
-                currentImageDataUrl = data.image;
-            } else {
-                previewDiv.innerHTML = '';
-                currentImageDataUrl = null;
-                document.getElementById('imageInput').value = '';
-            }
-            document.getElementById('recordStatus').innerText = 'Editing existing';
-        } else {
-            document.getElementById('recordDate').value = date;
-            document.getElementById('servicesInput').value = 0;
-            document.getElementById('productInput').value = 0;
-            document.getElementById('expensesInput').value = 0;
-            document.getElementById('imagePreviewArea').innerHTML = '';
-            currentImageDataUrl = null;
-            document.getElementById('recordStatus').innerText = 'New date';
-        }
-    }
-
-    async function saveNewRecord() {
-        const date = document.getElementById('recordDate').value;
-        if(!date) { alert("Please select a date."); return; }
-        const exists = await getDoc(doc(db, "sales", date)).then(s=>s.exists());
-        if(exists && !confirm(`Date ${date} already has a record. OVERWRITE?`)) return;
-        const services = parseFloat(document.getElementById('servicesInput').value)||0;
-        const product = parseFloat(document.getElementById('productInput').value)||0;
-        const expenses = parseFloat(document.getElementById('expensesInput').value)||0;
-        await setDoc(doc(db, "sales", date), { date, services, product, expenses, image: currentImageDataUrl || null, updatedAt: new Date().toISOString() });
-        showToast("✓ Saved / overwritten");
-        document.getElementById('recordStatus').innerText = 'Saved!';
-        setTimeout(()=> document.getElementById('recordStatus').innerText = 'Ready', 2000);
-    }
-
-    async function updateExisting() {
-        const date = document.getElementById('recordDate').value;
-        if(!date) { alert("Select a date"); return; }
-        const exists = await getDoc(doc(db, "sales", date)).then(s=>s.exists());
-        if(!exists) { alert("No record exists. Use 'Save as New' first."); return; }
-        const services = parseFloat(document.getElementById('servicesInput').value)||0;
-        const product = parseFloat(document.getElementById('productInput').value)||0;
-        const expenses = parseFloat(document.getElementById('expensesInput').value)||0;
-        await setDoc(doc(db, "sales", date), { date, services, product, expenses, image: currentImageDataUrl || null, updatedAt: new Date().toISOString() }, { merge: true });
-        showToast("✓ Updated");
-        document.getElementById('recordStatus').innerText = 'Updated!';
-        setTimeout(()=> document.getElementById('recordStatus').innerText = 'Ready', 2000);
-    }
-
-    document.getElementById('imageInput').addEventListener('change', (e) => {
-        if(e.target.files && e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = ev => {
-                currentImageDataUrl = ev.target.result;
-                document.getElementById('imagePreviewArea').innerHTML = `<img src="${currentImageDataUrl}" style="width:60px;height:60px;border-radius:12px;"><button id="clearImageBtn" style="background:#4169E1;color:white;border:none;border-radius:30px;padding:4px 12px;margin-left:8px;">Remove</button>`;
-                document.getElementById('clearImageBtn')?.addEventListener('click', () => {
-                    currentImageDataUrl = null;
-                    document.getElementById('imagePreviewArea').innerHTML = '';
-                    document.getElementById('imageInput').value = '';
-                });
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        } else {
-            currentImageDataUrl = null;
-            document.getElementById('imagePreviewArea').innerHTML = '';
-        }
-    });
-
-    function exportToExcel() {
-        const filtered = getFilteredRecords();
-        if(!filtered.length) { alert("No data for current filters. Adjust filters or add records."); return; }
-        const sheet = [["Date","Services (KES)","Product (KES)","Expenses (KES)","Net Profit (KES)","Has Image"]];
-        filtered.forEach(r => {
-            const net = (r.services + r.product - r.expenses).toFixed(2);
-            sheet.push([r.date, r.services.toFixed(2), r.product.toFixed(2), r.expenses.toFixed(2), net, r.image ? "Yes" : "No"]);
-        });
-        const ws = XLSX.utils.aoa_to_sheet(sheet);
-        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Sales_Data");
-        XLSX.writeFile(wb, `Nabore_Sales_${new Date().toISOString().slice(0,19)}.xlsx`);
-    }
-
-    function initApp() {
-        const q = query(collection(db, "sales"), orderBy("date", "asc"));
-        onSnapshot(q, (snapshot) => {
-            allRecords = [];
-            snapshot.forEach(docSnap => allRecords.push({ id: docSnap.id, date: docSnap.id, ...docSnap.data() }));
-            updateFiltersUI();
-            renderTable();
-            updateDashboardAndCharts();
-        });
-
-        document.getElementById('saveNewBtn').onclick = saveNewRecord;
-        document.getElementById('updateExistingBtn').onclick = updateExisting;
-        document.getElementById('excelExportBtn').onclick = exportToExcel;
-        document.getElementById('resetFiltersBtn').onclick = () => { currYear="all"; currMonth="all"; currWeek="all"; updateFiltersUI(); updateDashboardAndCharts(); };
-        document.getElementById('yearFilter').onchange = (e) => { currYear = e.target.value; updateDashboardAndCharts(); };
-        document.getElementById('monthFilter').onchange = (e) => { currMonth = e.target.value; updateDashboardAndCharts(); };
-        document.getElementById('weekFilter').onchange = (e) => { currWeek = e.target.value; updateDashboardAndCharts(); };
-        document.getElementById('recordDate').valueAsDate = new Date();
-        setTimeout(() => loadDateForEdit(document.getElementById('recordDate').value), 300);
+    // Real-time listeners
+    function initApp(){
+        onSnapshot(query(collection(db,"sales"),orderBy("date","asc")), (snap)=>{ allSales=[]; snap.forEach(d=>allSales.push({id:d.id,date:d.id,...d.data()})); updateFiltersUI(); renderSalesTable(); updateDashboardCharts(); });
+        onSnapshot(collection(db,"inventory"), (snap)=>{ allInventory=[]; snap.forEach(d=>allInventory.push({id:d.id,...d.data()})); renderInventory(); });
+        // sync dashboard filters
+        document.getElementById('dashYearFilter').innerHTML = '<option value="all">All Years</option>';
+        document.getElementById('dashMonthFilter').innerHTML = '<option value="all">All Months</option>';
+        document.getElementById('dashWeekFilter').innerHTML = '<option value="all">All Weeks</option>';
+        document.getElementById('dashYearFilter').onchange = (e)=>{ currYear=e.target.value; updateDashboardCharts(); };
+        document.getElementById('dashMonthFilter').onchange = (e)=>{ currMonth=e.target.value; updateDashboardCharts(); };
+        document.getElementById('dashWeekFilter').onchange = (e)=>{ currWeek=e.target.value; updateDashboardCharts(); };
+        document.getElementById('dashResetFilters').onclick = ()=>{ currYear="all"; currMonth="all"; currWeek="all"; updateFiltersUI(); updateDashboardCharts(); };
+        setInterval(()=>{ if(document.querySelector('.tab-btn.active').dataset.tab === 'dashboard') updateDashboardCharts(); }, 1000);
     }
 </script>
 </body>
