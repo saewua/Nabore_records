@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#4169E1">
-    <title>Nabore Bookshop · POS + Inventory + Expenses</title>
+    <title>Nabore Bookshop · POS + Inventory + Expenses + Sales History</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
@@ -70,6 +70,7 @@
         <button class="tab-btn" data-tab="stock">📦 Stock Inventory</button>
         <button class="tab-btn" data-tab="expenses">💰 Expenses</button>
         <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
+        <button class="tab-btn" data-tab="saleshistory">📅 Sales History</button> <!-- NEW TAB -->
     </div>
 
     <!-- ==================== POS TAB ==================== -->
@@ -197,6 +198,30 @@
         </div>
     </div>
 
+    <!-- ==================== NEW: SALES HISTORY TAB ==================== -->
+    <div id="saleshistoryTab" class="tab-pane">
+        <div class="card">
+            <h3>📅 Daily Aggregated Sales (from 'sales' collection)</h3>
+            <div style="overflow-x:auto;">
+                <table id="salesHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Services (KES)</th>
+                            <th>Product (KES)</th>
+                            <th>Expenses (KES)</th>
+                            <th>Net (KES)</th>
+                            <th>Image</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesHistoryBody">
+                        <tr><td colspan="6">Loading sales data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <footer style="text-align:center; font-size:0.7rem; margin-top:2rem;">Nabore Bookshop · Complete POS & Management System</footer>
 </div>
 </div>
@@ -208,7 +233,7 @@
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
     // Firebase config (replace with your own)
-    const firebaseConfig = {
+   const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
   databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
@@ -233,6 +258,7 @@
     let stockItems = [];    // { id, name, quantity, price, lowThreshold }
     let expenses = [];
     let transactions = [];
+    let salesHistory = [];   // from 'sales' collection
 
     let editingProductId = null;
     let editingStockId = null;
@@ -258,7 +284,8 @@
         products: document.getElementById('productsTab'),
         stock: document.getElementById('stockTab'),
         expenses: document.getElementById('expensesTab'),
-        dashboard: document.getElementById('dashboardTab')
+        dashboard: document.getElementById('dashboardTab'),
+        saleshistory: document.getElementById('saleshistoryTab')
     };
     tabs.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -269,13 +296,14 @@
             if (btn.dataset.tab === 'dashboard') updateDashboard();
             if (btn.dataset.tab === 'pos') refreshProductSelect();
             if (btn.dataset.tab === 'expenses') loadExpensesWithFilters();
+            if (btn.dataset.tab === 'saleshistory') renderSalesHistory();
         });
     });
 
     // ========== PRODUCTS & SERVICES CRUD ==========
     async function renderProducts() {
         const tbody = document.getElementById('productsTableBody');
-        if (!products.length) { tbody.innerHTML = '<tr><td colspan="4">No products/services</td></tr>'; return; }
+        if (!products.length) { tbody.innerHTML = '</tr><td colspan="4">No products/services</td></tr>'; return; }
         let html = '';
         products.forEach(p => {
             html += `<tr>
@@ -391,7 +419,7 @@
     }
     function renderExpensesTable(data) {
         const tbody = document.getElementById('expensesTableBody');
-        if(!data.length) { tbody.innerHTML = '<tr><td colspan="5">No expenses recorded</td></tr>'; return; }
+        if(!data.length) { tbody.innerHTML = '<tr><td colspan="5">No expenses recorded</td><tr>'; return; }
         let html = '';
         data.forEach(exp => {
             html += `<tr>
@@ -471,7 +499,6 @@
         if(isNaN(price) || price<=0) { alert("Valid price required"); return; }
         const qty = parseInt(document.getElementById('posQty').value);
         if(isNaN(qty) || qty<1) return;
-        // if product type is Product, check stock
         if(type === "Product" && productId) {
             const stockItem = stockItems.find(s => s.name.toLowerCase() === name.toLowerCase());
             if(stockItem && stockItem.quantity < qty) { alert(`Insufficient stock: only ${stockItem.quantity} left`); return; }
@@ -505,7 +532,6 @@
         const total = cart.reduce((s,i)=>s+i.total,0);
         const receiptNo = `NB-${Date.now()}`;
         const batch = writeBatch(db);
-        // deduct stock for physical products
         for(const item of cart) {
             if(item.type === "Product") {
                 const stockItem = stockItems.find(s => s.name.toLowerCase() === item.name.toLowerCase());
@@ -521,7 +547,6 @@
             receiptNo, clientNumber, paymentMethod, items: cart, total, date: new Date().toISOString(), userId: auth.currentUser?.uid
         });
         await batch.commit();
-        // print receipt
         printReceipt({ receiptNo, clientNumber, paymentMethod, items: cart, total, date: new Date() });
         showToast("Sale completed & stock updated");
         cart = [];
@@ -573,13 +598,32 @@
         document.querySelectorAll('.reprintBtn').forEach(btn => btn.addEventListener('click', () => { const data = JSON.parse(btn.dataset.receipt); printReceipt({ receiptNo: data.receiptNo, clientNumber: data.clientNumber, paymentMethod: data.paymentMethod, items: data.items, total: data.total, date: data.date }); }));
     }
 
+    // ========== SALES HISTORY (from 'sales' collection, sorted ascending) ==========
+    function renderSalesHistory() {
+        const tbody = document.getElementById('salesHistoryBody');
+        if(!salesHistory.length) { tbody.innerHTML = '<tr><td colspan="6">No sales records found.</td></tr>'; return; }
+        let html = '';
+        // salesHistory is already sorted ascending by date because we sort in the listener
+        salesHistory.forEach(record => {
+            const net = (record.services || 0) + (record.product || 0) - (record.expenses || 0);
+            const img = record.image ? `<img src="${record.image}" style="width:40px;height:40px;border-radius:8px;" onclick="window.open('${record.image}','_blank')">` : '—';
+            html += `<tr>
+                <td>${record.date}</td>
+                <td>${formatKES(record.services || 0)}</td>
+                <td>${formatKES(record.product || 0)}</td>
+                <td>${formatKES(record.expenses || 0)}</td>
+                <td>${formatKES(net)}</td>
+                <td>${img}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    }
+
     // ========== DASHBOARD ==========
     let trendChart = null, pieChart = null;
     async function updateDashboard() {
-        // stock value
         const stockValue = stockItems.reduce((sum, i) => sum + (i.quantity * i.price), 0);
         document.getElementById('totalStockValue').innerText = formatKES(stockValue);
-        // sales from transactions
         let totalProductSales = 0, totalServiceIncome = 0;
         transactions.forEach(t => {
             t.items.forEach(item => {
@@ -604,7 +648,6 @@
         trendChart = new Chart(document.getElementById('trendChart'), {
             type: 'line', data: { labels: last7, datasets: [{ label: 'Sales', data: salesData, borderColor: '#4169E1' }, { label: 'Expenses', data: expData, borderColor: '#e67e22' }] }
         });
-        // stock pie (by stock value)
         const stockNames = stockItems.map(s => s.name);
         const stockValues = stockItems.map(s => s.quantity * s.price);
         if(pieChart) pieChart.destroy();
@@ -620,6 +663,14 @@
         onSnapshot(collection(db,"stock"), snap => { stockItems = []; snap.forEach(d => stockItems.push({id:d.id,...d.data()})); renderStock(); if(panes.dashboard.classList.contains('active')) updateDashboard(); });
         onSnapshot(collection(db,"expenses"), snap => { expenses = []; snap.forEach(d => expenses.push({id:d.id,...d.data()})); loadExpensesWithFilters(); if(panes.dashboard.classList.contains('active')) updateDashboard(); });
         onSnapshot(collection(db,"transactions"), snap => { transactions = []; snap.forEach(d => transactions.push({id:d.id,...d.data()})); loadRecentTransactions(); if(panes.dashboard.classList.contains('active')) updateDashboard(); });
+        // NEW: Listen to 'sales' collection, sorted by date ascending
+        onSnapshot(query(collection(db,"sales"), orderBy("date","asc")), snap => {
+            salesHistory = [];
+            snap.forEach(doc => {
+                salesHistory.push({ id: doc.id, ...doc.data() });
+            });
+            renderSalesHistory();
+        });
         document.getElementById('expenseDate').valueAsDate = new Date();
         refreshProductSelect();
         updateDashboard();
