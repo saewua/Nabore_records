@@ -19,9 +19,9 @@
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
         .card { background: white; border-radius: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #eef2f6; padding: 1.25rem; margin-bottom: 1.5rem; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
         .stat-card { background: white; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; color: #0f2b3d; }
+        .stat-value { font-size: 1.6rem; font-weight: 800; color: #0f2b3d; }
         .form-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1rem; }
         .input-group { flex: 1 1 160px; min-width: 130px; }
         .input-group label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #4169E1; display: block; margin-bottom: 0.25rem; }
@@ -70,7 +70,7 @@
         <button class="tab-btn" data-tab="stock">📦 Stock Inventory</button>
         <button class="tab-btn" data-tab="expenses">💰 Expenses</button>
         <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
-        <button class="tab-btn" data-tab="saleshistory">📅 Sales History</button> <!-- NEW TAB -->
+        <button class="tab-btn" data-tab="saleshistory">📅 Sales History</button>
     </div>
 
     <!-- ==================== POS TAB ==================== -->
@@ -109,7 +109,7 @@
         </div>
         <div class="card">
             <h3>📜 Recent Transactions</h3>
-            <div style="overflow-x:auto;"><table id="transactionsTable"><thead><tr><th>Time</th><th>Client</th><th>Payment</th><th>Items</th><th>Total</th><th>Receipt</th></tr></thead><tbody id="transactionsBody"><tr><td colspan="6">Loading...</td></tr></tbody></table></div>
+            <div style="overflow-x:auto;"><table id="transactionsTable"><thead><tr><th>Time</th><th>Client</th><th>Payment</th><th>Items</th><th>Total</th><th>Receipt</th></tr></thead><tbody id="transactionsBody"><tr><td colspan="6">Loading......</tbody></table></div>
         </div>
     </div>
 
@@ -198,10 +198,22 @@
         </div>
     </div>
 
-    <!-- ==================== NEW: SALES HISTORY TAB ==================== -->
+    <!-- ==================== SALES HISTORY TAB (with dashboard + CSV) ==================== -->
     <div id="saleshistoryTab" class="tab-pane">
         <div class="card">
-            <h3>📅 Daily Aggregated Sales (from 'sales' collection)</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+                <h3>📅 Daily Aggregated Sales (from 'sales' collection)</h3>
+                <button id="exportSalesHistoryCsv" class="btn-outline">📎 Download CSV</button>
+            </div>
+
+            <!-- Summary dashboard -->
+            <div class="dashboard-grid" style="margin-bottom:1.5rem;">
+                <div class="card stat-card"><h3>Total Services</h3><div class="stat-value" id="salesHistoryTotalServices">KES 0.00</div></div>
+                <div class="card stat-card"><h3>Total Product Sales</h3><div class="stat-value" id="salesHistoryTotalProduct">KES 0.00</div></div>
+                <div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="salesHistoryTotalExpenses">KES 0.00</div></div>
+                <div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="salesHistoryNetProfit">KES 0.00</div></div>
+            </div>
+
             <div style="overflow-x:auto;">
                 <table id="salesHistoryTable">
                     <thead>
@@ -233,7 +245,7 @@
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
     // Firebase config (replace with your own)
-   const firebaseConfig = {
+ const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
   databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
@@ -296,14 +308,14 @@
             if (btn.dataset.tab === 'dashboard') updateDashboard();
             if (btn.dataset.tab === 'pos') refreshProductSelect();
             if (btn.dataset.tab === 'expenses') loadExpensesWithFilters();
-            if (btn.dataset.tab === 'saleshistory') renderSalesHistory();
+            if (btn.dataset.tab === 'saleshistory') renderSalesHistory(); // update when tab opened
         });
     });
 
     // ========== PRODUCTS & SERVICES CRUD ==========
     async function renderProducts() {
         const tbody = document.getElementById('productsTableBody');
-        if (!products.length) { tbody.innerHTML = '</tr><td colspan="4">No products/services</td></tr>'; return; }
+        if (!products.length) { tbody.innerHTML = '<tr><td colspan="4">No products/services</td></tr>'; return; }
         let html = '';
         products.forEach(p => {
             html += `<tr>
@@ -419,7 +431,7 @@
     }
     function renderExpensesTable(data) {
         const tbody = document.getElementById('expensesTableBody');
-        if(!data.length) { tbody.innerHTML = '<tr><td colspan="5">No expenses recorded</td><tr>'; return; }
+        if(!data.length) { tbody.innerHTML = '<tr><td colspan="5">No expenses recorded</td></tr>'; return; }
         let html = '';
         data.forEach(exp => {
             html += `<tr>
@@ -598,25 +610,72 @@
         document.querySelectorAll('.reprintBtn').forEach(btn => btn.addEventListener('click', () => { const data = JSON.parse(btn.dataset.receipt); printReceipt({ receiptNo: data.receiptNo, clientNumber: data.clientNumber, paymentMethod: data.paymentMethod, items: data.items, total: data.total, date: data.date }); }));
     }
 
-    // ========== SALES HISTORY (from 'sales' collection, sorted ascending) ==========
+    // ========== SALES HISTORY (with dashboard stats + CSV export) ==========
     function renderSalesHistory() {
         const tbody = document.getElementById('salesHistoryBody');
-        if(!salesHistory.length) { tbody.innerHTML = '<tr><td colspan="6">No sales records found.</td></tr>'; return; }
+        if(!salesHistory.length) {
+            tbody.innerHTML = '<tr><td colspan="6">No sales records found.</td></tr>';
+            // Reset dashboard stats
+            document.getElementById('salesHistoryTotalServices').innerText = 'KES 0.00';
+            document.getElementById('salesHistoryTotalProduct').innerText = 'KES 0.00';
+            document.getElementById('salesHistoryTotalExpenses').innerText = 'KES 0.00';
+            document.getElementById('salesHistoryNetProfit').innerText = 'KES 0.00';
+            return;
+        }
+
+        let totalServices = 0, totalProduct = 0, totalExpenses = 0;
         let html = '';
-        // salesHistory is already sorted ascending by date because we sort in the listener
         salesHistory.forEach(record => {
-            const net = (record.services || 0) + (record.product || 0) - (record.expenses || 0);
+            const services = record.services || 0;
+            const product = record.product || 0;
+            const expenses = record.expenses || 0;
+            const net = services + product - expenses;
+            totalServices += services;
+            totalProduct += product;
+            totalExpenses += expenses;
             const img = record.image ? `<img src="${record.image}" style="width:40px;height:40px;border-radius:8px;" onclick="window.open('${record.image}','_blank')">` : '—';
             html += `<tr>
                 <td>${record.date}</td>
-                <td>${formatKES(record.services || 0)}</td>
-                <td>${formatKES(record.product || 0)}</td>
-                <td>${formatKES(record.expenses || 0)}</td>
+                <td>${formatKES(services)}</td>
+                <td>${formatKES(product)}</td>
+                <td>${formatKES(expenses)}</td>
                 <td>${formatKES(net)}</td>
                 <td>${img}</td>
             </tr>`;
         });
         tbody.innerHTML = html;
+        const netProfit = totalServices + totalProduct - totalExpenses;
+        document.getElementById('salesHistoryTotalServices').innerText = formatKES(totalServices);
+        document.getElementById('salesHistoryTotalProduct').innerText = formatKES(totalProduct);
+        document.getElementById('salesHistoryTotalExpenses').innerText = formatKES(totalExpenses);
+        document.getElementById('salesHistoryNetProfit').innerText = formatKES(netProfit);
+    }
+
+    // Export Sales History to CSV
+    function exportSalesHistoryToCSV() {
+        if(!salesHistory.length) {
+            alert("No sales data to export.");
+            return;
+        }
+        const headers = ["Date", "Services (KES)", "Product Sales (KES)", "Expenses (KES)", "Net Profit (KES)", "Has Image"];
+        const rows = salesHistory.map(record => {
+            const services = record.services || 0;
+            const product = record.product || 0;
+            const expenses = record.expenses || 0;
+            const net = services + product - expenses;
+            return [record.date, services.toFixed(2), product.toFixed(2), expenses.toFixed(2), net.toFixed(2), record.image ? "Yes" : "No"];
+        });
+        const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Nabore_Sales_History_${new Date().toISOString().slice(0,19)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast("Sales history CSV exported");
     }
 
     // ========== DASHBOARD ==========
@@ -663,7 +722,7 @@
         onSnapshot(collection(db,"stock"), snap => { stockItems = []; snap.forEach(d => stockItems.push({id:d.id,...d.data()})); renderStock(); if(panes.dashboard.classList.contains('active')) updateDashboard(); });
         onSnapshot(collection(db,"expenses"), snap => { expenses = []; snap.forEach(d => expenses.push({id:d.id,...d.data()})); loadExpensesWithFilters(); if(panes.dashboard.classList.contains('active')) updateDashboard(); });
         onSnapshot(collection(db,"transactions"), snap => { transactions = []; snap.forEach(d => transactions.push({id:d.id,...d.data()})); loadRecentTransactions(); if(panes.dashboard.classList.contains('active')) updateDashboard(); });
-        // NEW: Listen to 'sales' collection, sorted by date ascending
+        // Sales history sorted ascending by date
         onSnapshot(query(collection(db,"sales"), orderBy("date","asc")), snap => {
             salesHistory = [];
             snap.forEach(doc => {
@@ -674,6 +733,9 @@
         document.getElementById('expenseDate').valueAsDate = new Date();
         refreshProductSelect();
         updateDashboard();
+
+        // CSV export button for sales history
+        document.getElementById('exportSalesHistoryCsv').onclick = exportSalesHistoryToCSV;
     }
 </script>
 </body>
