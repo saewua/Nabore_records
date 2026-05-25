@@ -109,7 +109,7 @@
         </div>
         <div class="card">
             <h3>📜 Recent Transactions</h3>
-            <div style="overflow-x:auto;"><table id="transactionsTable"><thead><tr><th>Time</th><th>Client</th><th>Payment</th><th>Items</th><th>Total</th><th>Receipt</th></tr></thead><tbody id="transactionsBody"><tr><td colspan="6">Loading......</tbody></table></div>
+            <div style="overflow-x:auto;"><table id="transactionsTable"><thead><tr><th>Time</th><th>Client</th><th>Payment</th><th>Items</th><th>Total</th><th>Receipt</th></tr></thead><tbody id="transactionsBody"><tr><td colspan="6">Loading...</tbody></table></div>
         </div>
     </div>
 
@@ -179,7 +179,7 @@
             <button id="exportExpensesCsv" class="btn-outline">📎 Export CSV</button>
         </div>
         <div class="table-wrapper">
-            <table id="expensesTable"><thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Description</th><th>Actions</th></tr></thead><tbody id="expensesTableBody"></tbody></table>
+            <table id="expensesTable"><thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Description</th><th>Actions</th></table></thead><tbody id="expensesTableBody"></tbody></table>
         </div>
     </div>
 
@@ -198,37 +198,25 @@
         </div>
     </div>
 
-    <!-- ==================== SALES HISTORY TAB (with dashboard + CSV) ==================== -->
+    <!-- ==================== SALES HISTORY TAB ==================== -->
     <div id="saleshistoryTab" class="tab-pane">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
                 <h3>📅 Daily Aggregated Sales (from 'sales' collection)</h3>
                 <button id="exportSalesHistoryCsv" class="btn-outline">📎 Download CSV</button>
             </div>
-
-            <!-- Summary dashboard -->
             <div class="dashboard-grid" style="margin-bottom:1.5rem;">
                 <div class="card stat-card"><h3>Total Services</h3><div class="stat-value" id="salesHistoryTotalServices">KES 0.00</div></div>
                 <div class="card stat-card"><h3>Total Product Sales</h3><div class="stat-value" id="salesHistoryTotalProduct">KES 0.00</div></div>
                 <div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="salesHistoryTotalExpenses">KES 0.00</div></div>
                 <div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="salesHistoryNetProfit">KES 0.00</div></div>
             </div>
-
             <div style="overflow-x:auto;">
                 <table id="salesHistoryTable">
                     <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Services (KES)</th>
-                            <th>Product (KES)</th>
-                            <th>Expenses (KES)</th>
-                            <th>Net (KES)</th>
-                            <th>Image</th>
-                        </tr>
+                        <tr><th>Date</th><th>Services (KES)</th><th>Product (KES)</th><th>Expenses (KES)</th><th>Net (KES)</th><th>Image</th></tr>
                     </thead>
-                    <tbody id="salesHistoryBody">
-                        <tr><td colspan="6">Loading sales data...</td></tr>
-                    </tbody>
+                    <tbody id="salesHistoryBody"><tr><td colspan="6">Loading sales data...</tbody>
                 </table>
             </div>
         </div>
@@ -245,7 +233,8 @@
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
     // Firebase config (replace with your own)
- const firebaseConfig = {
+   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
   databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
@@ -266,17 +255,16 @@
     const authError = document.getElementById('authErrorMsg');
 
     // Data stores
-    let products = [];      // { id, name, type, price }
-    let stockItems = [];    // { id, name, quantity, price, lowThreshold }
+    let products = [];
+    let stockItems = [];
     let expenses = [];
     let transactions = [];
-    let salesHistory = [];   // from 'sales' collection
+    let salesHistory = [];
 
     let editingProductId = null;
     let editingStockId = null;
     let cart = [];
 
-    // Helper
     function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
     function formatKES(v) { return `KES ${v.toFixed(2)}`; }
 
@@ -308,22 +296,17 @@
             if (btn.dataset.tab === 'dashboard') updateDashboard();
             if (btn.dataset.tab === 'pos') refreshProductSelect();
             if (btn.dataset.tab === 'expenses') loadExpensesWithFilters();
-            if (btn.dataset.tab === 'saleshistory') renderSalesHistory(); // update when tab opened
+            if (btn.dataset.tab === 'saleshistory') renderSalesHistory();
         });
     });
 
-    // ========== PRODUCTS & SERVICES CRUD ==========
+    // ========== PRODUCTS & SERVICES ==========
     async function renderProducts() {
         const tbody = document.getElementById('productsTableBody');
-        if (!products.length) { tbody.innerHTML = '<tr><td colspan="4">No products/services</td></tr>'; return; }
+        if (!products.length) { tbody.innerHTML = '<tr><td colspan="4">No products/services</td></td>'; return; }
         let html = '';
         products.forEach(p => {
-            html += `<tr>
-                <td>${p.name}</td>
-                <td>${p.type}</td>
-                <td>${formatKES(p.price)}</td>
-                <td><button class="editProduct" data-id="${p.id}">✏️</button> <button class="deleteProduct" data-id="${p.id}" style="background:#b91c1c;">🗑️</button></td>
-            </tr>`;
+            html += `<tr><td>${p.name}</td><td>${p.type}</td><td>${formatKES(p.price)}</td><td><button class="editProduct" data-id="${p.id}">✏️</button> <button class="deleteProduct" data-id="${p.id}" style="background:#b91c1c;">🗑️</button></td></tr>`;
         });
         tbody.innerHTML = html;
         document.querySelectorAll('.editProduct').forEach(btn => btn.addEventListener('click', () => editProduct(btn.dataset.id)));
@@ -359,7 +342,7 @@
     function clearProductForm() { document.getElementById('prodName').value = ''; document.getElementById('prodPrice').value = ''; editingProductId = null; document.getElementById('prodEditId').innerText = ''; }
     document.getElementById('cancelProductEdit').onclick = clearProductForm;
 
-    // ========== STOCK INVENTORY ==========
+    // ========== STOCK ==========
     async function renderStock() {
         const tbody = document.getElementById('stockTableBody');
         if(!stockItems.length) { tbody.innerHTML = '<tr><td colspan="5">No stock items</td></tr>'; document.getElementById('lowStockList').innerHTML = '<p>No low stock items.</p>'; return; }
@@ -367,13 +350,7 @@
         stockItems.forEach(item => {
             const isLow = item.quantity <= item.lowThreshold;
             if(isLow) lowHtml += `<li>${item.name} (${item.quantity} left, below ${item.lowThreshold})</li>`;
-            html += `<tr>
-                <td>${item.name}</td>
-                <td class="${isLow?'low-stock':''}">${item.quantity}</td>
-                <td>${formatKES(item.price)}</td>
-                <td>${item.lowThreshold}</td>
-                <td><button class="editStock" data-id="${item.id}">✏️</button> <button class="deleteStock" data-id="${item.id}" style="background:#b91c1c;">🗑️</button></td>
-            </tr>`;
+            html += `<tr><td>${item.name}</td><td class="${isLow?'low-stock':''}">${item.quantity}</td><td>${formatKES(item.price)}</td><td>${item.lowThreshold}</td><td><button class="editStock" data-id="${item.id}">✏️</button> <button class="deleteStock" data-id="${item.id}" style="background:#b91c1c;">🗑️</button></td></tr>`;
         });
         lowHtml += '</ul>';
         tbody.innerHTML = html;
@@ -431,16 +408,10 @@
     }
     function renderExpensesTable(data) {
         const tbody = document.getElementById('expensesTableBody');
-        if(!data.length) { tbody.innerHTML = '<tr><td colspan="5">No expenses recorded</td></tr>'; return; }
+        if(!data.length) { tbody.innerHTML = '<table><td colspan="5">No expenses recorded</td></tr>'; return; }
         let html = '';
         data.forEach(exp => {
-            html += `<tr>
-                <td>${exp.date}</td>
-                <td>${exp.category}</td>
-                <td>${formatKES(exp.amount)}</td>
-                <td>${exp.description || '-'}</td>
-                <td><button class="deleteExpense" data-id="${exp.id}" style="background:#b91c1c;">🗑️</button></td>
-            </tr>`;
+            html += `<tr><td>${exp.date}</td><td>${exp.category}</td><td>${formatKES(exp.amount)}</td><td>${exp.description || '-'}</td><td><button class="deleteExpense" data-id="${exp.id}" style="background:#b91c1c;">🗑️</button></td></tr>`;
         });
         tbody.innerHTML = html;
         document.querySelectorAll('.deleteExpense').forEach(btn => btn.addEventListener('click', async () => { if(confirm("Delete expense?")) await deleteDoc(doc(db,"expenses",btn.dataset.id)); }));
@@ -569,6 +540,7 @@
     }
     document.getElementById('completeSaleBtn').onclick = completeSale;
 
+    // ========== RECEIPT (A6, Royal Blue, Rounded, with "Thank you for shopping with us") ==========
     function printReceipt(sale) {
         const win = window.open('','_blank');
         let itemsHtml = '';
@@ -576,14 +548,56 @@
             itemsHtml += `<tr><td>${item.name}</td><td>${item.qty}</td><td>${formatKES(item.price)}</td><td>${formatKES(item.total)}</td></tr>`;
         });
         win.document.write(`
-            <html><head><title>Receipt ${sale.receiptNo}</title>
-            <style>body{font-family:'Courier New',monospace;padding:20px;max-width:380px;margin:auto;} table{width:100%;} .header{text-align:center;} .total{font-weight:bold;}</style>
-            </head><body>
-            <div class="header"><h2>📖 Nabore Bookshop</h2><p>${new Date(sale.date).toLocaleString()}</p><p>Receipt #: ${sale.receiptNo}</p><p>Client: ${sale.clientNumber}</p><p>Payment: ${sale.paymentMethod}</p><hr></div>
-            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
-            <hr><div class="total">TOTAL: ${formatKES(sale.total)}</div><hr>
-            <p style="text-align:center">Thank you!<br>Goods sold are not returnable.</p>
-            </body></html>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Receipt ${sale.receiptNo}</title>
+                <style>
+                    @page { size: A6; margin: 1.2rem; }
+                    body { font-family: 'Inter', 'Segoe UI', monospace; background: white; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                    .receipt { max-width: 100%; width: 100%; background: white; border-radius: 24px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden; font-size: 11px; }
+                    .receipt-header { background: #4169E1; color: white; padding: 1rem 1.2rem; text-align: center; }
+                    .receipt-header h2 { margin: 0; font-size: 1.4rem; letter-spacing: 1px; }
+                    .receipt-header p { margin: 0.3rem 0 0; font-size: 0.7rem; opacity: 0.9; }
+                    .receipt-body { padding: 1.2rem; }
+                    .info-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.75rem; border-bottom: 1px dashed #e2e8f0; padding-bottom: 0.4rem; }
+                    .info-row strong { color: #1e3a8a; }
+                    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.7rem; }
+                    th, td { text-align: left; padding: 0.5rem 0.2rem; border-bottom: 1px solid #f0f2f5; }
+                    th { color: #4169E1; font-weight: 600; }
+                    .total-row { text-align: right; font-weight: bold; font-size: 0.9rem; margin-top: 0.8rem; padding-top: 0.5rem; border-top: 2px solid #4169E1; }
+                    .footer { text-align: center; font-size: 0.6rem; color: #5b6e8c; margin-top: 1rem; padding-top: 0.5rem; border-top: 1px dashed #e2e8f0; }
+                </style>
+            </head>
+            <body>
+                <div class="receipt">
+                    <div class="receipt-header">
+                        <h2>📖 NABORE BOOKSHOP</h2>
+                        <p>Your trusted bookstore</p>
+                    </div>
+                    <div class="receipt-body">
+                        <div class="info-row">
+                            <span><strong>Receipt #</strong> ${sale.receiptNo}</span>
+                            <span><strong>Date</strong> ${new Date(sale.date).toLocaleString()}</span>
+                        </div>
+                        <div class="info-row">
+                            <span><strong>Client</strong> ${sale.clientNumber}</span>
+                            <span><strong>Payment</strong> ${sale.paymentMethod}</span>
+                        </div>
+                        <table>
+                            <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                            <tbody>${itemsHtml}</tbody>
+                        </table>
+                        <div class="total-row">
+                            TOTAL: ${formatKES(sale.total)}
+                        </div>
+                        <div class="footer">
+                            Thank you for shopping with us
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
         `);
         win.document.close();
         win.print();
@@ -597,32 +611,23 @@
         let html = '';
         snap.forEach(doc => {
             const t = doc.data();
-            html += `<tr>
-                <td>${new Date(t.date).toLocaleString()}</td>
-                <td>${t.clientNumber}</td>
-                <td>${t.paymentMethod}</td>
-                <td>${t.items.length} items</td>
-                <td>${formatKES(t.total)}</td>
-                <td><button class="reprintBtn" data-receipt='${JSON.stringify(t)}'>🖨️ Reprint</button></td>
-            </tr>`;
+            html += `<tr><td>${new Date(t.date).toLocaleString()}</td><td>${t.clientNumber}</td><td>${t.paymentMethod}</td><td>${t.items.length} items</td><td>${formatKES(t.total)}</td><td><button class="reprintBtn" data-receipt='${JSON.stringify(t)}'>🖨️ Reprint</button></td></tr>`;
         });
         tbody.innerHTML = html;
         document.querySelectorAll('.reprintBtn').forEach(btn => btn.addEventListener('click', () => { const data = JSON.parse(btn.dataset.receipt); printReceipt({ receiptNo: data.receiptNo, clientNumber: data.clientNumber, paymentMethod: data.paymentMethod, items: data.items, total: data.total, date: data.date }); }));
     }
 
-    // ========== SALES HISTORY (with dashboard stats + CSV export) ==========
+    // ========== SALES HISTORY ==========
     function renderSalesHistory() {
         const tbody = document.getElementById('salesHistoryBody');
         if(!salesHistory.length) {
             tbody.innerHTML = '<tr><td colspan="6">No sales records found.</td></tr>';
-            // Reset dashboard stats
             document.getElementById('salesHistoryTotalServices').innerText = 'KES 0.00';
             document.getElementById('salesHistoryTotalProduct').innerText = 'KES 0.00';
             document.getElementById('salesHistoryTotalExpenses').innerText = 'KES 0.00';
             document.getElementById('salesHistoryNetProfit').innerText = 'KES 0.00';
             return;
         }
-
         let totalServices = 0, totalProduct = 0, totalExpenses = 0;
         let html = '';
         salesHistory.forEach(record => {
@@ -634,14 +639,7 @@
             totalProduct += product;
             totalExpenses += expenses;
             const img = record.image ? `<img src="${record.image}" style="width:40px;height:40px;border-radius:8px;" onclick="window.open('${record.image}','_blank')">` : '—';
-            html += `<tr>
-                <td>${record.date}</td>
-                <td>${formatKES(services)}</td>
-                <td>${formatKES(product)}</td>
-                <td>${formatKES(expenses)}</td>
-                <td>${formatKES(net)}</td>
-                <td>${img}</td>
-            </tr>`;
+            html += `<tr><td>${record.date}</td><td>${formatKES(services)}</td><td>${formatKES(product)}</td><td>${formatKES(expenses)}</td><td>${formatKES(net)}</td><td>${img}</td></tr>`;
         });
         tbody.innerHTML = html;
         const netProfit = totalServices + totalProduct - totalExpenses;
@@ -651,12 +649,8 @@
         document.getElementById('salesHistoryNetProfit').innerText = formatKES(netProfit);
     }
 
-    // Export Sales History to CSV
     function exportSalesHistoryToCSV() {
-        if(!salesHistory.length) {
-            alert("No sales data to export.");
-            return;
-        }
+        if(!salesHistory.length) { alert("No sales data to export."); return; }
         const headers = ["Date", "Services (KES)", "Product Sales (KES)", "Expenses (KES)", "Net Profit (KES)", "Has Image"];
         const rows = salesHistory.map(record => {
             const services = record.services || 0;
@@ -696,7 +690,6 @@
         document.getElementById('totalServiceIncome').innerText = formatKES(totalServiceIncome);
         document.getElementById('totalExpensesDashboard').innerText = formatKES(totalExp);
         document.getElementById('netProfitDashboard').innerText = formatKES(netProfit);
-        // trend chart: last 7 days sales vs expenses
         const last7 = [...Array(7)].map((_,i) => { let d = new Date(); d.setDate(d.getDate()-i); return d.toISOString().slice(0,10); }).reverse();
         const salesByDay = {}, expByDay = {};
         transactions.forEach(t => { const day = t.date.slice(0,10); salesByDay[day] = (salesByDay[day] || 0) + t.total; });
@@ -713,28 +706,22 @@
         pieChart = new Chart(document.getElementById('stockPieChart'), { type: 'pie', data: { labels: stockNames, datasets: [{ data: stockValues, backgroundColor: '#4169E1' }] } });
     }
 
-    // Helper for getting documents from query
     async function getDocs(query) { const snapshot = await query; return snapshot; }
 
-    // ========== REAL-TIME LISTENERS ==========
+    // ========== INIT ==========
     function initApp() {
         onSnapshot(collection(db,"products"), snap => { products = []; snap.forEach(d => products.push({id:d.id,...d.data()})); renderProducts(); refreshProductSelect(); });
         onSnapshot(collection(db,"stock"), snap => { stockItems = []; snap.forEach(d => stockItems.push({id:d.id,...d.data()})); renderStock(); if(panes.dashboard.classList.contains('active')) updateDashboard(); });
         onSnapshot(collection(db,"expenses"), snap => { expenses = []; snap.forEach(d => expenses.push({id:d.id,...d.data()})); loadExpensesWithFilters(); if(panes.dashboard.classList.contains('active')) updateDashboard(); });
         onSnapshot(collection(db,"transactions"), snap => { transactions = []; snap.forEach(d => transactions.push({id:d.id,...d.data()})); loadRecentTransactions(); if(panes.dashboard.classList.contains('active')) updateDashboard(); });
-        // Sales history sorted ascending by date
         onSnapshot(query(collection(db,"sales"), orderBy("date","asc")), snap => {
             salesHistory = [];
-            snap.forEach(doc => {
-                salesHistory.push({ id: doc.id, ...doc.data() });
-            });
+            snap.forEach(doc => { salesHistory.push({ id: doc.id, ...doc.data() }); });
             renderSalesHistory();
         });
         document.getElementById('expenseDate').valueAsDate = new Date();
         refreshProductSelect();
         updateDashboard();
-
-        // CSV export button for sales history
         document.getElementById('exportSalesHistoryCsv').onclick = exportSalesHistoryToCSV;
     }
 </script>
