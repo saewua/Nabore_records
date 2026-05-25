@@ -73,7 +73,7 @@
         <button class="tab-btn" data-tab="saleshistory">📅 Sales History</button>
     </div>
 
-    <!-- ==================== POS TAB ==================== -->
+    <!-- ==================== POS TAB (with CSV export) ==================== -->
     <div id="posTab" class="tab-pane active">
         <div class="card">
             <h3>🧾 New Sale (POS) – deducts stock, saves transaction</h3>
@@ -108,8 +108,16 @@
             </div>
         </div>
         <div class="card">
-            <h3>📜 Recent Transactions</h3>
-            <div style="overflow-x:auto;"><table id="transactionsTable"><thead><tr><th>Time</th><th>Client</th><th>Payment</th><th>Items</th><th>Total</th><th>Receipt</th></tr></thead><tbody id="transactionsBody"><tr><td colspan="6">Loading...</tbody></table></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:1rem;">
+                <h3>📜 Recent Transactions</h3>
+                <button id="exportTransactionsCsv" class="btn-outline">📎 Export Transactions CSV</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="transactionsTable">
+                    <thead><tr><th>Time</th><th>Client</th><th>Payment</th><th>Items</th><th>Total</th><th>Receipt</th></tr></thead>
+                    <tbody id="transactionsBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -179,7 +187,7 @@
             <button id="exportExpensesCsv" class="btn-outline">📎 Export CSV</button>
         </div>
         <div class="table-wrapper">
-            <table id="expensesTable"><thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Description</th><th>Actions</th></table></thead><tbody id="expensesTableBody"></tbody></table>
+            <table id="expensesTable"><thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Description</th><th>Actions</th></tr></thead><tbody id="expensesTableBody"></tbody></table>
         </div>
     </div>
 
@@ -213,10 +221,8 @@
             </div>
             <div style="overflow-x:auto;">
                 <table id="salesHistoryTable">
-                    <thead>
-                        <tr><th>Date</th><th>Services (KES)</th><th>Product (KES)</th><th>Expenses (KES)</th><th>Net (KES)</th><th>Image</th></tr>
-                    </thead>
-                    <tbody id="salesHistoryBody"><tr><td colspan="6">Loading sales data...</tbody>
+                    <thead><tr><th>Date</th><th>Services (KES)</th><th>Product (KES)</th><th>Expenses (KES)</th><th>Net (KES)</th><th>Image</th></tr></thead>
+                    <tbody id="salesHistoryBody"><tr><td colspan="6">Loading sales data...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -233,7 +239,7 @@
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
     // Firebase config (replace with your own)
-   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
@@ -303,7 +309,7 @@ const firebaseConfig = {
     // ========== PRODUCTS & SERVICES ==========
     async function renderProducts() {
         const tbody = document.getElementById('productsTableBody');
-        if (!products.length) { tbody.innerHTML = '<tr><td colspan="4">No products/services</td></td>'; return; }
+        if (!products.length) { tbody.innerHTML = '<tr><td colspan="4">No products/services</td></tr>'; return; }
         let html = '';
         products.forEach(p => {
             html += `<tr><td>${p.name}</td><td>${p.type}</td><td>${formatKES(p.price)}</td><td><button class="editProduct" data-id="${p.id}">✏️</button> <button class="deleteProduct" data-id="${p.id}" style="background:#b91c1c;">🗑️</button></td></tr>`;
@@ -323,21 +329,34 @@ const firebaseConfig = {
         }
     }
     document.getElementById('addProductBtn').onclick = async () => {
-        const name = document.getElementById('prodName').value.trim();
-        if(!name) return;
-        const type = document.getElementById('prodType').value;
-        const price = parseFloat(document.getElementById('prodPrice').value);
-        if(isNaN(price)) return;
-        await addDoc(collection(db,"products"), { name, type, price, createdAt: new Date() });
-        clearProductForm();
+        try {
+            const name = document.getElementById('prodName').value.trim();
+            const type = document.getElementById('prodType').value;
+            const price = parseFloat(document.getElementById('prodPrice').value);
+            if (!name) { showToast("❌ Product name required"); return; }
+            if (isNaN(price) || price <= 0) { showToast("❌ Valid price > 0 required"); return; }
+            await addDoc(collection(db, "products"), { name, type, price, createdAt: new Date() });
+            showToast("✅ Product added");
+            clearProductForm();
+        } catch (err) {
+            console.error(err);
+            showToast("❌ Add failed: " + err.message);
+        }
     };
     document.getElementById('updateProductBtn').onclick = async () => {
-        if(!editingProductId) return;
+        if(!editingProductId) { showToast("No product selected to update"); return; }
         const name = document.getElementById('prodName').value.trim();
         const type = document.getElementById('prodType').value;
         const price = parseFloat(document.getElementById('prodPrice').value);
-        await updateDoc(doc(db,"products",editingProductId), { name, type, price, updatedAt: new Date() });
-        clearProductForm();
+        if (!name) { showToast("Product name required"); return; }
+        if (isNaN(price) || price <= 0) { showToast("Valid price required"); return; }
+        try {
+            await updateDoc(doc(db, "products", editingProductId), { name, type, price, updatedAt: new Date() });
+            showToast("✅ Product updated");
+            clearProductForm();
+        } catch (err) {
+            showToast("❌ Update failed: " + err.message);
+        }
     };
     function clearProductForm() { document.getElementById('prodName').value = ''; document.getElementById('prodPrice').value = ''; editingProductId = null; document.getElementById('prodEditId').innerText = ''; }
     document.getElementById('cancelProductEdit').onclick = clearProductForm;
@@ -376,6 +395,7 @@ const firebaseConfig = {
         const price = parseFloat(document.getElementById('stockPrice').value) || 0;
         const thresh = parseInt(document.getElementById('stockThreshold').value) || 5;
         await addDoc(collection(db,"stock"), { name, quantity: qty, price, lowThreshold: thresh });
+        showToast("Stock added");
         clearStockForm();
     };
     document.getElementById('updateStockBtn').onclick = async () => {
@@ -385,6 +405,7 @@ const firebaseConfig = {
         const price = parseFloat(document.getElementById('stockPrice').value);
         const thresh = parseInt(document.getElementById('stockThreshold').value);
         await updateDoc(doc(db,"stock",editingStockId), { name, quantity: qty, price, lowThreshold: thresh });
+        showToast("Stock updated");
         clearStockForm();
     };
     function clearStockForm() { document.getElementById('stockName').value = ''; document.getElementById('stockQty').value = 0; document.getElementById('stockPrice').value = ''; editingStockId = null; document.getElementById('stockEditId').innerText = ''; }
@@ -408,7 +429,7 @@ const firebaseConfig = {
     }
     function renderExpensesTable(data) {
         const tbody = document.getElementById('expensesTableBody');
-        if(!data.length) { tbody.innerHTML = '<table><td colspan="5">No expenses recorded</td></tr>'; return; }
+        if(!data.length) { tbody.innerHTML = '<tr><td colspan="5">No expenses recorded</td></tr>'; return; }
         let html = '';
         data.forEach(exp => {
             html += `<tr><td>${exp.date}</td><td>${exp.category}</td><td>${formatKES(exp.amount)}</td><td>${exp.description || '-'}</td><td><button class="deleteExpense" data-id="${exp.id}" style="background:#b91c1c;">🗑️</button></td></tr>`;
@@ -540,7 +561,7 @@ const firebaseConfig = {
     }
     document.getElementById('completeSaleBtn').onclick = completeSale;
 
-    // ========== RECEIPT (A6, Royal Blue, Rounded, with "Thank you for shopping with us") ==========
+    // ========== RECEIPT ==========
     function printReceipt(sale) {
         const win = window.open('','_blank');
         let itemsHtml = '';
@@ -588,12 +609,8 @@ const firebaseConfig = {
                             <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
                             <tbody>${itemsHtml}</tbody>
                         </table>
-                        <div class="total-row">
-                            TOTAL: ${formatKES(sale.total)}
-                        </div>
-                        <div class="footer">
-                            Thank you for shopping with us
-                        </div>
+                        <div class="total-row">TOTAL: ${formatKES(sale.total)}</div>
+                        <div class="footer">Thank you for shopping with us</div>
                     </div>
                 </div>
             </body>
@@ -615,6 +632,46 @@ const firebaseConfig = {
         });
         tbody.innerHTML = html;
         document.querySelectorAll('.reprintBtn').forEach(btn => btn.addEventListener('click', () => { const data = JSON.parse(btn.dataset.receipt); printReceipt({ receiptNo: data.receiptNo, clientNumber: data.clientNumber, paymentMethod: data.paymentMethod, items: data.items, total: data.total, date: data.date }); }));
+    }
+
+    // ========== EXPORT TRANSACTIONS CSV ==========
+    async function exportTransactionsToCSV() {
+        try {
+            const q = query(collection(db, "transactions"), orderBy("date", "desc"));
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                showToast("No transactions to export");
+                return;
+            }
+            const headers = ["Receipt No", "Date", "Client Number", "Payment Method", "Items (Name x Qty)", "Total (KES)"];
+            const rows = [];
+            snapshot.forEach(doc => {
+                const t = doc.data();
+                const itemsSummary = t.items.map(item => `${item.name} x${item.qty}`).join("; ");
+                rows.push([
+                    t.receiptNo,
+                    new Date(t.date).toLocaleString(),
+                    t.clientNumber,
+                    t.paymentMethod,
+                    itemsSummary,
+                    t.total.toFixed(2)
+                ]);
+            });
+            const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Nabore_Transactions_${new Date().toISOString().slice(0,19)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast("Transactions CSV exported");
+        } catch (err) {
+            console.error(err);
+            showToast("Export failed: " + err.message);
+        }
     }
 
     // ========== SALES HISTORY ==========
@@ -723,6 +780,7 @@ const firebaseConfig = {
         refreshProductSelect();
         updateDashboard();
         document.getElementById('exportSalesHistoryCsv').onclick = exportSalesHistoryToCSV;
+        document.getElementById('exportTransactionsCsv').onclick = exportTransactionsToCSV;
     }
 </script>
 </body>
