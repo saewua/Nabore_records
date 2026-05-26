@@ -8,23 +8,19 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.21.0/dist/index.min.js'
 ];
 
-// Install: pre-cache critical assets
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
-  self.skipWaiting(); // your existing line
+  self.skipWaiting();
 });
 
-// Fetch: network first, fallback to cache
 self.addEventListener('fetch', event => {
   event.respondWith(
-    fetch(event.request)
-      .catch(() => caches.match(event.request))
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
 
-// Optional: clean up old caches when a new SW activates
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
