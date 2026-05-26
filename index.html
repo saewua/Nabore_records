@@ -257,16 +257,17 @@
     const getDocs = firestoreGetDocs;
 
     // Firebase configuration (shared demo – replace with your own if needed)
-    const firebaseConfig = {
-        apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
-        authDomain: "nabore-bookshop.firebaseapp.com",
-        databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "nabore-bookshop",
-        storageBucket: "nabore-bookshop.firebasestorage.app",
-        messagingSenderId: "619207980890",
-        appId: "1:619207980890:web:c680907f519b3d6efa2563",
-        measurementId: "G-YKNGLT2VLT"
-    };
+   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
+  authDomain: "nabore-bookshop.firebaseapp.com",
+  databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "nabore-bookshop",
+  storageBucket: "nabore-bookshop.firebasestorage.app",
+  messagingSenderId: "619207980890",
+  appId: "1:619207980890:web:c680907f519b3d6efa2563",
+  measurementId: "G-YKNGLT2VLT"
+};
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
