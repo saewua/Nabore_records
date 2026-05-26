@@ -4,137 +4,359 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#4169E1">
-    <title>Nabore Bookshop · Tabs + Stock CSV Export</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nabore Sales">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192?text=N">
+    <title>Nabore Bookshop · Responsive POS + Inventory + Profit + AI</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.21.0/dist/index.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: #ffffff;
+            background: #f8fafc;
             color: #1e293b;
-            padding: 1.2rem;
+            padding: 0.8rem;
             line-height: 1.5;
         }
-        .app-container { max-width: 1400px; margin: 0 auto; }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Tabs - responsive wrap + horizontal scroll on very small screens */
         .tabs {
             display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            border-bottom: 2px solid #eef2f6;
-            margin-bottom: 2rem;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 0.3rem;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+            background: white;
+            border-radius: 2rem 2rem 0 0;
+            padding: 0.3rem 0.5rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
         }
+
         .tab-btn {
             background: transparent;
             border: none;
-            padding: 0.7rem 1.5rem;
-            font-size: 1rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: #5b6e8c;
             cursor: pointer;
-            border-radius: 2rem 2rem 0 0;
+            border-radius: 2rem;
             transition: 0.2s;
+            white-space: nowrap;
         }
+
         .tab-btn.active {
             color: #4169E1;
+            background: #eff6ff;
             border-bottom: 3px solid #4169E1;
-            background: #f8faff;
         }
-        .tab-pane { display: none; }
-        .tab-pane.active { display: block; }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.2s;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Cards */
         .card {
-            background: #ffffff;
+            background: white;
             border-radius: 1.5rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             border: 1px solid #eef2f6;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
+            padding: 1rem;
+            margin-bottom: 1.2rem;
         }
+
+        /* Dashboard grids */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
         }
-        .stat-card { padding: 1rem; }
-        .stat-card h3 { font-size: 0.75rem; text-transform: uppercase; color: #5b6e8c; margin-bottom: 0.5rem; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; color: #0f2b3d; }
+
+        .stat-card {
+            background: white;
+            padding: 0.8rem;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0f2b3d;
+            word-break: break-word;
+        }
+
+        /* Forms - stack on mobile */
         .form-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.8rem;
             align-items: flex-end;
             margin-bottom: 1rem;
         }
+
         .input-group {
-            flex: 1 1 160px;
-            min-width: 130px;
+            flex: 1 1 140px;
+            min-width: 120px;
         }
+
         .input-group label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 600;
             text-transform: uppercase;
             color: #4169E1;
             display: block;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
         }
-        .input-group input, .input-group select {
+
+        .input-group input,
+        .input-group select {
             width: 100%;
-            padding: 0.7rem 1rem;
+            padding: 0.6rem 0.8rem;
             border-radius: 2rem;
             border: 1.5px solid #e2e8f0;
             background: #fff;
+            font-size: 0.9rem;
         }
+
+        /* Buttons */
         button {
             background: #4169E1;
             border: none;
             border-radius: 2rem;
-            padding: 0.6rem 1.2rem;
+            padding: 0.6rem 1rem;
             font-weight: 600;
             color: white;
             cursor: pointer;
             transition: 0.2s;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.4rem;
+            font-size: 0.85rem;
+            width: auto;
         }
-        button:hover { background: #2b4fc7; transform: translateY(-1px); }
-        .btn-outline { background: transparent; border: 1.5px solid #4169E1; color: #4169E1; }
-        .btn-outline:hover { background: #eef3ff; transform: none; }
-        .btn-danger { background: #b91c1c; }
-        .btn-danger:hover { background: #991b1b; }
-        .btn-small { padding: 0.3rem 0.8rem; font-size: 0.75rem; }
-        .filter-bar { background: #f8fafc; border-radius: 3rem; padding: 0.5rem 1.2rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid #f0f2f5; }
-        th { background: #f9fbfd; color: #1e3a8a; }
-        .badge { background: #eef2ff; padding: 0.2rem 0.6rem; border-radius: 2rem; font-size: 0.7rem; }
-        .low-stock { background: #fee2e2; color: #b91c1c; font-weight: 500; }
+
+        button:hover {
+            background: #2b4fc7;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #4169E1;
+            color: #4169E1;
+        }
+
+        .btn-outline:hover {
+            background: #eef3ff;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: #b91c1c;
+        }
+
+        .btn-danger:hover {
+            background: #991b1b;
+        }
+
+        /* Tables - horizontal scroll on mobile */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        th {
+            background: #f9fbfd;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+
+        /* Cart item */
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #eef2f6;
+            padding: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .cart-total {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: right;
+            margin-top: 0.8rem;
+        }
+
+        /* Toast */
         .toast {
             position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
+            bottom: 1rem;
+            right: 1rem;
             background: #2b5e3b;
             color: white;
-            padding: 0.7rem 1.5rem;
-            border-radius: 3rem;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
             z-index: 1000;
             opacity: 0;
             transition: 0.2s;
             pointer-events: none;
+            font-size: 0.8rem;
         }
-        .toast.show { opacity: 1; }
-        @media (max-width: 640px) { .stat-value { font-size: 1.4rem; } .tabs { justify-content: center; } }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* AI response */
+        .ai-response {
+            background: #f0f7ff;
+            border-left: 4px solid #4169E1;
+            padding: 0.8rem;
+            margin-top: 1rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .api-input {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .api-input input {
+            flex: 2;
+            min-width: 180px;
+        }
+
+        .low-stock {
+            background: #fee2e2;
+            font-weight: 500;
+        }
+
+        /* Login container */
+        #loginContainer {
+            max-width: 400px;
+            margin: 10vh auto;
+            background: white;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .card {
+                padding: 0.8rem;
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            .form-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .input-group {
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn-outline, .btn-danger {
+                width: 100%;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.6rem;
+            }
+
+            .tabs {
+                padding: 0.2rem 0.3rem;
+            }
+
+            .tab-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 1.1rem;
+            }
+        }
     </style>
 </head>
 <body>
 <div id="loginContainer" style="max-width:400px; margin:10vh auto; background:white; border-radius:2rem; padding:2rem; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
     <h2 style="color:#1e3a8a;">🔐 Nabore Bookshop</h2>
-    <p>Sign in to access sales & inventory</p>
+    <p>Sign in to access POS & management</p>
     <input type="email" id="loginEmail" placeholder="Email" style="width:100%; padding:0.8rem; margin:0.5rem 0; border-radius:2rem; border:1px solid #e2e8f0;">
     <input type="password" id="loginPassword" placeholder="Password" style="width:100%; padding:0.8rem; margin:0.5rem 0; border-radius:2rem; border:1px solid #e2e8f0;">
-    <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem;">
+    <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">
         <button id="loginBtn">Sign In</button>
         <button id="signupBtn" class="btn-outline">Create Account</button>
     </div>
@@ -143,124 +365,205 @@
 
 <div id="mainContent" style="display:none;">
 <div class="app-container">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <h1 style="font-size:1.8rem; background:linear-gradient(135deg,#4169E1,#1e3a8a); background-clip:text; -webkit-background-clip:text; color:transparent;">📖 Nabore Bookshop</h1>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+        <h1 style="font-size:1.5rem; background:linear-gradient(135deg,#4169E1,#1e3a8a); background-clip:text; -webkit-background-clip:text; color:transparent;">📖 Nabore Bookshop</h1>
         <button id="logoutMainBtn" class="btn-outline">🚪 Logout</button>
     </div>
 
     <!-- Tabs -->
     <div class="tabs">
-        <button class="tab-btn active" data-tab="sales">📝 Sales Recording</button>
-        <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
-        <button class="tab-btn" data-tab="inventory">📦 Stock Inventory</button>
+        <button class="tab-btn active" data-tab="pos">🧾 Point of Sale</button>
+        <button class="tab-btn" data-tab="products">🛍️ Products & Services</button>
+        <button class="tab-btn" data-tab="stock">📦 Stock Inventory</button>
+        <button class="tab-btn" data-tab="expenses">💰 Expenses</button>
+        <button class="tab-btn" data-tab="dashboard">📊 Dashboard + AI</button>
+        <button class="tab-btn" data-tab="saleshistory">📅 Sales History</button>
     </div>
 
-    <!-- Sales Tab -->
-    <div id="salesTab" class="tab-pane active">
+    <!-- POS TAB -->
+    <div id="posTab" class="tab-pane active">
         <div class="card">
-            <h3 style="color:#1e3a8a;">📝 Add / Edit daily sales (one record per date)</h3>
+            <h3>🧾 New Sale – deducts stock, saves transaction</h3>
             <div class="form-row">
-                <div class="input-group"><label>Date</label><input type="date" id="recordDate"></div>
-                <div class="input-group"><label>Services (KES)</label><input type="number" id="servicesInput" step="any" value="0"></div>
-                <div class="input-group"><label>Product (KES)</label><input type="number" id="productInput" step="any" value="0"></div>
-                <div class="input-group"><label>Expenses (KES)</label><input type="number" id="expensesInput" step="any" value="0"></div>
-                <div class="input-group"><label>Receipt image</label><input type="file" id="imageInput" accept="image/*"></div>
-                <div class="input-group"><button id="saveNewBtn" style="background:#2b5e3b;">➕ Save as New</button></div>
-                <div class="input-group"><button id="updateExistingBtn" style="background:#dc843a;">✏️ Update Existing</button></div>
+                <div class="input-group"><label>Product / Service</label>
+                    <select id="posProductSelect"><option value="">-- Select product/service --</option></select>
+                    <input type="text" id="posCustomName" placeholder="Or custom item">
+                </div>
+                <div class="input-group"><label>Qty</label><input type="number" id="posQty" value="1" min="1"></div>
+                <div class="input-group"><label>Selling Price (KES)</label><input type="number" id="posPrice" step="any" placeholder="Price"></div>
+                <div class="input-group"><button id="addToCartBtn">➕ Add to Cart</button></div>
             </div>
-            <div id="imagePreviewArea" style="margin-top:0.5rem;"></div>
-            <p class="status-badge" id="recordStatus" style="display:inline-block; margin-top:0.5rem;">Ready</p>
+            <div id="cartContainer" style="margin-top:1rem; border-top:1px solid #eef2f6; max-height:300px; overflow-y:auto;">
+                <div style="font-weight:bold; display:flex; justify-content:space-between; padding:0.5rem;"><span>Item</span><span>Qty</span><span>Price</span><span>Total</span><span></span></div>
+                <div id="cartItemsList"></div>
+            </div>
+            <div class="cart-total" id="cartTotal">Total: KES 0.00</div>
+            <div class="form-row" style="margin-top:1rem;">
+                <div class="input-group"><label>Client Number (Phone/ID)</label><input type="text" id="clientNumber" placeholder="07xxxxxxxx" required></div>
+                <div class="input-group"><label>Payment Method</label>
+                    <select id="paymentMethod"><option value="Cash">💵 Cash</option><option value="M-Pesa">📱 M-Pesa</option></select>
+                </div>
+                <div class="input-group"><button id="completeSaleBtn" style="background:#2b5e3b;">✅ Complete Sale & Print</button></div>
+                <div class="input-group"><button id="clearCartBtn" class="btn-outline">🗑️ Clear Cart</button></div>
+            </div>
         </div>
-        <div class="filter-bar">
-            <span>Sales filters:</span>
-            <select id="yearFilter"><option value="all">All Years</option></select>
-            <select id="monthFilter"><option value="all">All Months</option></select>
-            <select id="weekFilter"><option value="all">All Weeks</option></select>
-            <button id="resetFiltersBtn" class="btn-outline">⟳ Reset</button>
-            <button id="excelExportBtn" class="btn-outline">📎 Export Excel</button>
-        </div>
-        <div class="table-wrapper" style="overflow-x:auto;">
-            <table id="salesTable">
-                <thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th><th>Actions</th></tr></thead>
-                <tbody id="tableBody"><tr><td colspan="7">Loading......</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Dashboard Tab -->
-    <div id="dashboardTab" class="tab-pane">
-        <div class="filter-bar" style="margin-bottom:1rem;">
-            <span>📊 Dashboard filters (sales):</span>
-            <select id="dashYearFilter"><option value="all">All Years</option></select>
-            <select id="dashMonthFilter"><option value="all">All Months</option></select>
-            <select id="dashWeekFilter"><option value="all">All Weeks</option></select>
-            <button id="dashResetFilters" class="btn-outline">Reset</button>
-        </div>
-        <div class="dashboard-grid" id="dashboardStats">
-            <div class="card stat-card"><h3>Total Services</h3><div class="stat-value" id="totalServices">KES 0.00</div></div>
-            <div class="card stat-card"><h3>Total Product</h3><div class="stat-value" id="totalProducts">KES 0.00</div></div>
-            <div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="totalExpenses">KES 0.00</div></div>
-            <div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="netProfit">KES 0.00</div></div>
-        </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(400px,1fr)); gap:1.5rem;">
-            <div class="card"><h3 style="color:#1e3a8a;">📈 Daily Trends (Line)</h3><canvas id="salesLineChart" style="max-height:280px;"></canvas></div>
-            <div class="card"><h3 style="color:#1e3a8a;">📊 Net Profit per Day (Bar)</h3><canvas id="netProfitBarChart" style="max-height:280px;"></canvas></div>
-        </div>
-    </div>
-
-    <!-- Inventory Tab with CSV export button -->
-    <div id="inventoryTab" class="tab-pane">
         <div class="card">
-            <h3 style="color:#1e3a8a;">📦 Manage Stock Items</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+                <h3>📜 Recent Transactions</h3>
+                <button id="exportTransactionsCsv" class="btn-outline">📎 Export CSV</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="transactionsTable"><thead><tr><th>Time</th><th>Client</th><th>Payment</th><th>Items</th><th>Total</th><th>Receipt</th></tr></thead><tbody id="transactionsBody"><tr><td colspan="6">Loading...</tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCTS & SERVICES TAB (with buying/selling prices) -->
+    <div id="productsTab" class="tab-pane">
+        <div class="card">
+            <h3>🛍️ Manage Products & Services</h3>
             <div class="form-row">
-                <div class="input-group"><label>Product Name</label><input type="text" id="invName" placeholder="e.g., Exercise Book"></div>
-                <div class="input-group"><label>Quantity</label><input type="number" id="invQty" value="0"></div>
-                <div class="input-group"><label>Price (KES)</label><input type="number" id="invPrice" step="any" value="0"></div>
-                <div class="input-group"><label>Low Stock Threshold</label><input type="number" id="invThreshold" value="5"></div>
-                <div class="input-group"><button id="addInventoryBtn">➕ Add Item</button></div>
-                <div class="input-group"><button id="updateInventoryBtn" style="background:#dc843a;">✏️ Update</button></div>
-                <div class="input-group"><button id="cancelInvEdit" class="btn-outline">Cancel</button></div>
+                <div class="input-group"><label>Name</label><input type="text" id="prodName" placeholder="e.g., Novel, Editing"></div>
+                <div class="input-group"><label>Type</label>
+                    <select id="prodType"><option value="Product">Product (affects stock)</option><option value="Service">Service (no stock)</option></select>
+                </div>
+                <div class="input-group"><label>Buying Price (KES)</label><input type="number" id="prodBuyingPrice" step="any" placeholder="Cost"></div>
+                <div class="input-group"><label>Selling Price (KES)</label><input type="number" id="prodSellingPrice" step="any" placeholder="Price"></div>
+                <div class="input-group"><button id="addProductBtn">➕ Add</button></div>
+                <div class="input-group"><button id="updateProductBtn" style="background:#dc843a;">✏️ Update</button></div>
+                <div class="input-group"><button id="cancelProductEdit" class="btn-outline">Cancel</button></div>
             </div>
-            <p id="invEditId" style="font-size:0.7rem; color:#5b6e8c;"></p>
-            <div style="margin-top:1rem; display:flex; gap:0.8rem;">
-                <button id="exportInventoryCsvBtn" class="btn-outline">📎 Download Stock CSV</button>
-            </div>
+            <p id="prodEditId" style="font-size:0.7rem;"></p>
         </div>
         <div class="table-wrapper">
-            <table id="inventoryTable">
-                <thead><tr><th>Name</th><th>Quantity</th><th>Price (KES)</th><th>Low Stock</th><th>Actions</th></tr></thead>
-                <tbody id="invTableBody"><tr><td colspan="5">Loading inventory...</td></tr></tbody>
-            </table>
-        </div>
-        <div class="card" style="margin-top:1rem;">
-            <h4 style="color:#1e3a8a;">⚠️ Low Stock Alerts</h4>
-            <div id="lowStockList"></div>
+            <table id="productsTable"><thead><tr><th>Name</th><th>Type</th><th>Buying Price</th><th>Selling Price</th><th>Actions</th></tr></thead><tbody id="productsTableBody"></tbody></table>
         </div>
     </div>
 
-    <footer style="text-align:center; font-size:0.7rem; margin-top:2rem; color:#6c86a3;">🔐 Firebase Auth • Real-time sync • Sales one per date • Stock management with CSV export</footer>
+    <!-- STOCK INVENTORY TAB -->
+    <div id="stockTab" class="tab-pane">
+        <div class="card">
+            <h3>📦 Physical Stock Items</h3>
+            <div class="form-row">
+                <div class="input-group"><label>Name</label><input type="text" id="stockName"></div>
+                <div class="input-group"><label>Quantity</label><input type="number" id="stockQty" value="0"></div>
+                <div class="input-group"><label>Price (KES)</label><input type="number" id="stockPrice" step="any"></div>
+                <div class="input-group"><label>Low Stock Threshold</label><input type="number" id="stockThreshold" value="5"></div>
+                <div class="input-group"><button id="addStockBtn">➕ Add Stock</button></div>
+                <div class="input-group"><button id="updateStockBtn" style="background:#dc843a;">✏️ Update</button></div>
+                <div class="input-group"><button id="cancelStockEdit" class="btn-outline">Cancel</button></div>
+            </div>
+            <p id="stockEditId" style="font-size:0.7rem;"></p>
+            <button id="exportStockCsvBtn" class="btn-outline" style="width:auto;">📎 Export CSV</button>
+        </div>
+        <div class="table-wrapper">
+            <table id="stockTable"><thead><tr><th>Name</th><th>Quantity</th><th>Price</th><th>Low Stock</th><th>Actions</th></tr></thead><tbody id="stockTableBody"></tbody></table>
+        </div>
+        <div class="card"><h4>⚠️ Low Stock Alerts</h4><div id="lowStockList"></div></div>
+    </div>
+
+    <!-- EXPENSES TAB -->
+    <div id="expensesTab" class="tab-pane">
+        <div class="card">
+            <h3>💰 Record Expenses</h3>
+            <div class="form-row">
+                <div class="input-group"><label>Date</label><input type="date" id="expenseDate"></div>
+                <div class="input-group"><label>Category</label><input type="text" id="expenseCategory"></div>
+                <div class="input-group"><label>Amount (KES)</label><input type="number" id="expenseAmount" step="any"></div>
+                <div class="input-group"><label>Description</label><input type="text" id="expenseDesc"></div>
+                <div class="input-group"><button id="addExpenseBtn">➕ Add Expense</button></div>
+            </div>
+        </div>
+        <div class="filter-bar" style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+            <span>Filter:</span> <select id="expenseYearFilter"><option value="all">All Years</option></select>
+            <select id="expenseMonthFilter"><option value="all">All Months</option></select>
+            <button id="resetExpenseFilters" class="btn-outline">Reset</button>
+            <button id="exportExpensesCsv" class="btn-outline">📎 Export CSV</button>
+        </div>
+        <div class="table-wrapper">
+            <table id="expensesTable"><thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Description</th><th>Actions</th></tr></thead><tbody id="expensesTableBody"></tbody></table>
+        </div>
+    </div>
+
+    <!-- DASHBOARD + AI TAB -->
+    <div id="dashboardTab" class="tab-pane">
+        <div class="dashboard-grid">
+            <div class="card stat-card"><h3>Total Stock Value</h3><div class="stat-value" id="totalStockValue">KES 0.00</div></div>
+            <div class="card stat-card"><h3>Total Sales (Revenue)</h3><div class="stat-value" id="totalSalesRevenue">KES 0.00</div></div>
+            <div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="totalExpensesDashboard">KES 0.00</div></div>
+            <div class="card stat-card"><h3>Net Profit (after costs)</h3><div class="stat-value" id="netProfitDashboard">KES 0.00</div></div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem;">
+            <div class="card"><h3>📈 Sales & Expenses Trend</h3><canvas id="trendChart" style="max-height:250px;"></canvas></div>
+            <div class="card"><h3>📊 Stock Value by Item</h3><canvas id="stockPieChart" style="max-height:250px;"></canvas></div>
+        </div>
+        <!-- Additional management features -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1rem; margin-top:1rem;">
+            <div class="card">
+                <h3>🏆 Top Selling Products (by quantity)</h3>
+                <div id="topSellingList" style="max-height:200px; overflow-y:auto;">Loading...</div>
+            </div>
+            <div class="card">
+                <h3>🔄 Reorder Suggestions (Low Stock)</h3>
+                <div id="reorderSuggestions" style="max-height:200px; overflow-y:auto;">Loading...</div>
+            </div>
+        </div>
+        <!-- AI insights card -->
+        <div class="card">
+            <h3>🤖 AI Business Insights (Powered by Gemini)</h3>
+            <div class="api-input">
+                <input type="text" id="geminiApiKey" placeholder="Enter your Gemini API Key">
+                <button id="saveApiKeyBtn" class="btn-outline">Save Key</button>
+                <button id="getAiInsightsBtn" style="background:#4169E1;">✨ Get AI Insights</button>
+            </div>
+            <div id="aiResponse" class="ai-response">💡 Click "Get AI Insights" after saving your API key.</div>
+            <p style="font-size:0.7rem;">🔑 Get a free key from <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>. Stored locally.</p>
+        </div>
+    </div>
+
+    <!-- SALES HISTORY TAB -->
+    <div id="saleshistoryTab" class="tab-pane">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+                <h3>📅 Daily Aggregated Sales</h3>
+                <button id="exportSalesHistoryCsv" class="btn-outline">📎 Download CSV</button>
+            </div>
+            <div class="dashboard-grid" style="margin-bottom:1rem;">
+                <div class="card stat-card"><h3>Total Services</h3><div class="stat-value" id="salesHistoryTotalServices">KES 0.00</div></div>
+                <div class="card stat-card"><h3>Total Product Sales</h3><div class="stat-value" id="salesHistoryTotalProduct">KES 0.00</div></div>
+                <div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="salesHistoryTotalExpenses">KES 0.00</div></div>
+                <div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="salesHistoryNetProfit">KES 0.00</div></div>
+            </div>
+            <div class="table-wrapper">
+                <table id="salesHistoryTable"><thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th></tr></thead><tbody id="salesHistoryBody"><tr><td colspan="6">Loading...</tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <footer style="text-align:center; font-size:0.7rem; margin-top:1.5rem;">Nabore Bookshop · Profit Tracking & Smart Insights</footer>
 </div>
 </div>
 <div id="toast" class="toast">✓ Action completed</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy, writeBatch, getDocs as firestoreGetDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai@0.21.0/dist/index.min.js";
 
-    // ========== 🔥 REPLACE WITH YOUR FIREBASE CONFIG ==========
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
-  authDomain: "nabore-bookshop.firebaseapp.com",
-  databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nabore-bookshop",
-  storageBucket: "nabore-bookshop.firebasestorage.app",
-  messagingSenderId: "619207980890",
-  appId: "1:619207980890:web:c680907f519b3d6efa2563",
-  measurementId: "G-YKNGLT2VLT"
-};
-    // ============================================================
+    const getDocs = firestoreGetDocs;
+
+    // Firebase configuration (shared demo – replace with your own if needed)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
+        authDomain: "nabore-bookshop.firebaseapp.com",
+        databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "nabore-bookshop",
+        storageBucket: "nabore-bookshop.firebasestorage.app",
+        messagingSenderId: "619207980890",
+        appId: "1:619207980890:web:c680907f519b3d6efa2563",
+        measurementId: "G-YKNGLT2VLT"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -269,14 +572,22 @@ const firebaseConfig = {
     const loginDiv = document.getElementById('loginContainer');
     const mainDiv = document.getElementById('mainContent');
     const authError = document.getElementById('authErrorMsg');
-    let allSales = [];
-    let allInventory = [];
-    let editingInvId = null;
+
+    let products = [];
+    let stockItems = [];
+    let expenses = [];
+    let transactions = [];
+    let salesHistory = [];
+
+    let editingProductId = null;
+    let editingStockId = null;
+    let cart = [];
 
     function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
     function formatKES(v) { return `KES ${v.toFixed(2)}`; }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
-    // AUTH
+    // Authentication
     onAuthStateChanged(auth, (user) => {
         if (user) { loginDiv.style.display = 'none'; mainDiv.style.display = 'block'; initApp(); }
         else { loginDiv.style.display = 'block'; mainDiv.style.display = 'none'; }
@@ -285,96 +596,391 @@ const firebaseConfig = {
     document.getElementById('signupBtn').onclick = async () => { try { await createUserWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); } catch(e) { authError.innerText=e.message; } };
     document.getElementById('logoutMainBtn').onclick = () => signOut(auth);
 
-    // TAB SWITCHING
+    // Tab switching
     const tabs = document.querySelectorAll('.tab-btn');
-    const panes = { sales: document.getElementById('salesTab'), dashboard: document.getElementById('dashboardTab'), inventory: document.getElementById('inventoryTab') };
+    const panes = {
+        pos: document.getElementById('posTab'),
+        products: document.getElementById('productsTab'),
+        stock: document.getElementById('stockTab'),
+        expenses: document.getElementById('expensesTab'),
+        dashboard: document.getElementById('dashboardTab'),
+        saleshistory: document.getElementById('saleshistoryTab')
+    };
     tabs.forEach(btn => {
         btn.addEventListener('click', () => {
             tabs.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             Object.values(panes).forEach(p => p.classList.remove('active'));
             panes[btn.dataset.tab].classList.add('active');
-            if (btn.dataset.tab === 'dashboard') updateDashboardCharts();
-            if (btn.dataset.tab === 'inventory') renderInventory();
+            if (btn.dataset.tab === 'dashboard') { updateDashboard(); maybeLoadApiKey(); updateManagementFeatures(); }
+            if (btn.dataset.tab === 'pos') refreshProductSelect();
+            if (btn.dataset.tab === 'expenses') loadExpensesWithFilters();
+            if (btn.dataset.tab === 'saleshistory') renderSalesHistory();
         });
     });
 
-    // ---------- SALES LOGIC (with print receipt) ----------
-    let lineChart=null, barChart=null;
-    function getWeekNumber(d){ const date=new Date(d); date.setHours(0,0,0); date.setDate(date.getDate()+3-(date.getDay()+6)%7); const week1=new Date(date.getFullYear(),0,4); return 1+Math.round(((date-week1)/86400000-3+(week1.getDay()+6)%7)/7); }
-    let currYear="all", currMonth="all", currWeek="all";
-    function getFilteredSales(){ let f=[...allSales]; if(currYear!=="all") f=f.filter(r=>r.date.startsWith(currYear)); if(currMonth!=="all") f=f.filter(r=>new Date(r.date).getMonth()+1===parseInt(currMonth)); if(currWeek!=="all") f=f.filter(r=>getWeekNumber(r.date).toString()===currWeek); return f; }
-    function updateFiltersUI(){ const years=[...new Set(allSales.map(r=>r.date.split('-')[0]))].sort(); const ySel=document.getElementById('yearFilter'); ySel.innerHTML='<option value="all">All Years</option>'; years.forEach(y=>ySel.innerHTML+=`<option value="${y}">${y}</option>`); ySel.value=currYear; const mSel=document.getElementById('monthFilter'); mSel.innerHTML='<option value="all">All Months</option>'; for(let i=1;i<=12;i++) mSel.innerHTML+=`<option value="${i}">${i}</option>`; mSel.value=currMonth; const weeks=[...new Set(allSales.map(r=>getWeekNumber(r.date)))].sort((a,b)=>a-b); const wSel=document.getElementById('weekFilter'); wSel.innerHTML='<option value="all">All Weeks</option>'; weeks.forEach(w=>wSel.innerHTML+=`<option value="${w}">Week ${w}</option>`); wSel.value=currWeek; }
-    async function printReceipt(rec){ const net=rec.services+rec.product-rec.expenses; const win=window.open('','_blank'); win.document.write(`<html><head><title>Receipt ${rec.date}</title><style>body{font-family:Inter;padding:20px;max-width:400px;margin:auto;}</style></head><body><div style="text-align:center"><h2>Nabore Bookshop</h2><hr><p><strong>${rec.date}</strong></p><p>Services: ${formatKES(rec.services)}</p><p>Product: ${formatKES(rec.product)}</p><p>Expenses: ${formatKES(rec.expenses)}</p><p><strong>Net: ${formatKES(net)}</strong></p>${rec.image?`<img src="${rec.image}" style="max-width:200px;">`:''}<hr><p>Thank you!</p></div></body></html>`); win.document.close(); win.print(); }
-    function renderSalesTable(){ const tbody=document.getElementById('tableBody'); if(!allSales.length){ tbody.innerHTML='<tr><td colspan="7">✨ No sales yet</td></tr>'; return; } let html=''; allSales.forEach(rec=>{ const net=rec.services+rec.product-rec.expenses; const img=rec.image?`<img src="${rec.image}" style="width:40px;height:40px;border-radius:8px;" onclick="window.open('${rec.image}','_blank')">`:'—'; html+=`<tr><td>${rec.date}</td><td>${formatKES(rec.services)}</td><td>${formatKES(rec.product)}</td><td>${formatKES(rec.expenses)}</td><td>${formatKES(net)}</td><td>${img}</td><td><button class="edit-btn" data-date="${rec.date}" style="background:#eef3ff;border:none;border-radius:2rem;padding:0.2rem 0.8rem;">✏️ Edit</button> <button class="print-btn" data-date="${rec.date}" data-services="${rec.services}" data-product="${rec.product}" data-expenses="${rec.expenses}" data-image="${rec.image||''}" style="background:#e9ecef;border:none;border-radius:2rem;padding:0.2rem 0.8rem;">🖨️ Print</button></td></tr>`; }); tbody.innerHTML=html; document.querySelectorAll('.edit-btn').forEach(btn=>btn.addEventListener('click',()=>loadDateForEdit(btn.dataset.date))); document.querySelectorAll('.print-btn').forEach(btn=>btn.addEventListener('click',()=>printReceipt({date:btn.dataset.date,services:parseFloat(btn.dataset.services),product:parseFloat(btn.dataset.product),expenses:parseFloat(btn.dataset.expenses),image:btn.dataset.image||null}))); }
-    async function loadDateForEdit(date){ const snap=await getDoc(doc(db,"sales",date)); if(snap.exists()){ const d=snap.data(); document.getElementById('recordDate').value=date; document.getElementById('servicesInput').value=d.services; document.getElementById('productInput').value=d.product; document.getElementById('expensesInput').value=d.expenses; currentImageDataUrl=d.image||null; document.getElementById('imagePreviewArea').innerHTML=d.image?`<img src="${d.image}" style="width:60px;"><button id="clearTemp">Remove</button>`:''; document.getElementById('clearTemp')?.addEventListener('click',()=>{ document.getElementById('imagePreviewArea').innerHTML=''; currentImageDataUrl=null; }); document.getElementById('recordStatus').innerText='Editing existing'; } else { document.getElementById('recordDate').value=date; document.getElementById('servicesInput').value=0; document.getElementById('productInput').value=0; document.getElementById('expensesInput').value=0; document.getElementById('imagePreviewArea').innerHTML=''; currentImageDataUrl=null; document.getElementById('recordStatus').innerText='New date'; } }
-    let currentImageDataUrl=null;
-    document.getElementById('imageInput').onchange=e=>{ if(e.target.files[0]){ const r=new FileReader(); r.onload=ev=>{ currentImageDataUrl=ev.target.result; document.getElementById('imagePreviewArea').innerHTML=`<img src="${currentImageDataUrl}" style="width:60px;"><button id="clearImg">Remove</button>`; document.getElementById('clearImg')?.addEventListener('click',()=>{ document.getElementById('imagePreviewArea').innerHTML=''; currentImageDataUrl=null; }); }; r.readAsDataURL(e.target.files[0]); } else { currentImageDataUrl=null; document.getElementById('imagePreviewArea').innerHTML=''; } };
-    document.getElementById('saveNewBtn').onclick=async()=>{ const date=document.getElementById('recordDate').value; if(!date) return; const exists=await getDoc(doc(db,"sales",date)).then(s=>s.exists()); if(exists && !confirm(`Overwrite ${date}?`)) return; const svc=parseFloat(document.getElementById('servicesInput').value)||0, prd=parseFloat(document.getElementById('productInput').value)||0, exp=parseFloat(document.getElementById('expensesInput').value)||0; await setDoc(doc(db,"sales",date),{date,services:svc,product:prd,expenses:exp,image:currentImageDataUrl||null,updatedAt:new Date().toISOString()}); showToast("Saved"); };
-    document.getElementById('updateExistingBtn').onclick=async()=>{ const date=document.getElementById('recordDate').value; if(!date) return; const exists=await getDoc(doc(db,"sales",date)).then(s=>s.exists()); if(!exists){ alert("No record. Use Save as New."); return; } const svc=parseFloat(document.getElementById('servicesInput').value)||0, prd=parseFloat(document.getElementById('productInput').value)||0, exp=parseFloat(document.getElementById('expensesInput').value)||0; await setDoc(doc(db,"sales",date),{date,services:svc,product:prd,expenses:exp,image:currentImageDataUrl||null,updatedAt:new Date().toISOString()},{merge:true}); showToast("Updated"); };
-    function updateDashboardCharts(){ const filtered=getFilteredSales(); let ts=0,tp=0,te=0; filtered.forEach(r=>{ ts+=r.services; tp+=r.product; te+=r.expenses; }); const net=ts+tp-te; document.getElementById('totalServices').innerHTML=formatKES(ts); document.getElementById('totalProducts').innerHTML=formatKES(tp); document.getElementById('totalExpenses').innerHTML=formatKES(te); document.getElementById('netProfit').innerHTML=formatKES(net); const labels=filtered.map(r=>r.date), svcD=filtered.map(r=>r.services), prdD=filtered.map(r=>r.product), expD=filtered.map(r=>r.expenses), netD=filtered.map(r=>r.services+r.product-r.expenses); if(lineChart)lineChart.destroy(); if(barChart)barChart.destroy(); const ctxL=document.getElementById('salesLineChart').getContext('2d'), ctxB=document.getElementById('netProfitBarChart').getContext('2d'); if(labels.length){ lineChart=new Chart(ctxL,{type:'line',data:{labels,datasets:[{label:'Services',data:svcD,borderColor:'#2ecc71',tension:0.3,fill:true},{label:'Product',data:prdD,borderColor:'#3498db',tension:0.3},{label:'Expenses',data:expD,borderColor:'#e67e22',tension:0.3}]},options:{responsive:true}}); barChart=new Chart(ctxB,{type:'bar',data:{labels,datasets:[{label:'Net Profit',data:netD,backgroundColor:'#4169E1',borderRadius:12}]}}); } else { lineChart=new Chart(ctxL,{type:'line',data:{labels:['No data'],datasets:[]}}); barChart=new Chart(ctxB,{type:'bar',data:{labels:['No data'],datasets:[]}}); } }
-    document.getElementById('resetFiltersBtn').onclick=()=>{ currYear="all"; currMonth="all"; currWeek="all"; updateFiltersUI(); updateDashboardCharts(); renderSalesTable(); };
-    document.getElementById('yearFilter').onchange=e=>{ currYear=e.target.value; updateDashboardCharts(); renderSalesTable(); };
-    document.getElementById('monthFilter').onchange=e=>{ currMonth=e.target.value; updateDashboardCharts(); renderSalesTable(); };
-    document.getElementById('weekFilter').onchange=e=>{ currWeek=e.target.value; updateDashboardCharts(); renderSalesTable(); };
-    document.getElementById('excelExportBtn').onclick=()=>{ const f=getFilteredSales(); if(!f.length){ alert("No data for filters"); return; } const sheet=[["Date","Services","Product","Expenses","Net","Has Image"]]; f.forEach(r=>sheet.push([r.date,r.services.toFixed(2),r.product.toFixed(2),r.expenses.toFixed(2),(r.services+r.product-r.expenses).toFixed(2),r.image?"Yes":"No"])); const ws=XLSX.utils.aoa_to_sheet(sheet); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Sales"); XLSX.writeFile(wb,`Nabore_Sales_${new Date().toISOString().slice(0,19)}.xlsx`); };
-
-    // ---------- INVENTORY LOGIC WITH CSV EXPORT ----------
-    async function renderInventory(){
-        const tbody=document.getElementById('invTableBody');
-        if(!allInventory.length){ tbody.innerHTML='<tr><td colspan="5">No stock items</td></tr>'; document.getElementById('lowStockList').innerHTML='<p>No low stock items.</p>'; return; }
-        let html='';
-        let lowStockHtml='<ul>';
-        allInventory.forEach(item=>{
-            const isLow = item.quantity <= item.lowThreshold;
-            if(isLow) lowStockHtml+=`<li>${item.name} (${item.quantity} left, below ${item.lowThreshold})</li>`;
-            html+=`<td>${item.name}</td><td class="${isLow?'low-stock':''}">${item.quantity}</td><td>${formatKES(item.price)}</td><td>${item.lowThreshold}</td>
-            <td><button class="editInv" data-id="${item.id}">✏️</button> <button class="deleteInv" data-id="${item.id}" style="background:#b91c1c;">🗑️</button></td></tr>`;
+    // ========== PRODUCTS & SERVICES ==========
+    async function renderProducts() {
+        const tbody = document.getElementById('productsTableBody');
+        if (!products.length) { tbody.innerHTML = '<tr><td colspan="5">No products/services</td></tr>'; return; }
+        let html = '';
+        products.forEach(p => {
+            const buying = p.buyingPrice || 0;
+            const selling = p.sellingPrice || p.price || 0;
+            html += `<tr>
+                <td>${escapeHtml(p.name)}</td>
+                <td>${escapeHtml(p.type)}</td>
+                <td>${formatKES(buying)}</td>
+                <td>${formatKES(selling)}</td>
+                <td><button class="editProduct" data-id="${p.id}">✏️ Edit</button> <button class="deleteProduct" data-id="${p.id}" style="background:#b91c1c;">🗑️ Delete</button></td>
+            </tr>`;
         });
-        lowStockHtml+='</ul>';
-        tbody.innerHTML=html;
-        document.getElementById('lowStockList').innerHTML = lowStockHtml;
-        document.querySelectorAll('.editInv').forEach(btn=>btn.addEventListener('click',()=>editInventory(btn.dataset.id)));
-        document.querySelectorAll('.deleteInv').forEach(btn=>btn.addEventListener('click',async()=>{ if(confirm("Delete item?")) await deleteDoc(doc(db,"inventory",btn.dataset.id)); }));
+        tbody.innerHTML = html;
+        document.querySelectorAll('.editProduct').forEach(btn => btn.addEventListener('click', (e) => editProduct(btn.dataset.id)));
+        document.querySelectorAll('.deleteProduct').forEach(btn => btn.addEventListener('click', async (e) => { if(confirm("Delete this product/service?")) await deleteDoc(doc(db,"products",btn.dataset.id)); showToast("Deleted"); }));
     }
-    async function editInventory(id){ const item=allInventory.find(i=>i.id===id); if(item){ editingInvId=id; document.getElementById('invName').value=item.name; document.getElementById('invQty').value=item.quantity; document.getElementById('invPrice').value=item.price; document.getElementById('invThreshold').value=item.lowThreshold; document.getElementById('invEditId').innerText=`Editing: ${item.name}`; } }
-    document.getElementById('addInventoryBtn').onclick=async()=>{ const name=document.getElementById('invName').value.trim(); if(!name){ alert("Product name required"); return; } const qty=parseInt(document.getElementById('invQty').value)||0; const price=parseFloat(document.getElementById('invPrice').value)||0; const thresh=parseInt(document.getElementById('invThreshold').value)||5; await addDoc(collection(db,"inventory"),{name,quantity:qty,price,lowThreshold:thresh,createdAt:new Date()}); showToast("Item added"); clearInvForm(); };
-    document.getElementById('updateInventoryBtn').onclick=async()=>{ if(!editingInvId){ alert("No item selected for update. Click Edit first."); return; } const name=document.getElementById('invName').value.trim(); if(!name) return; const qty=parseInt(document.getElementById('invQty').value)||0; const price=parseFloat(document.getElementById('invPrice').value)||0; const thresh=parseInt(document.getElementById('invThreshold').value)||5; await updateDoc(doc(db,"inventory",editingInvId),{name,quantity:qty,price,lowThreshold:thresh,updatedAt:new Date()}); showToast("Item updated"); clearInvForm(); };
-    document.getElementById('cancelInvEdit').onclick=()=>{ clearInvForm(); };
-    function clearInvForm(){ document.getElementById('invName').value=''; document.getElementById('invQty').value=0; document.getElementById('invPrice').value=0; document.getElementById('invThreshold').value=5; editingInvId=null; document.getElementById('invEditId').innerText=''; }
-
-    // NEW: Export inventory to CSV
-    function exportInventoryToCSV() {
-        if (!allInventory.length) { alert("No inventory data to export."); return; }
-        const headers = ["Product Name", "Quantity", "Price (KES)", "Low Stock Threshold"];
-        const rows = allInventory.map(item => [item.name, item.quantity, item.price, item.lowThreshold]);
-        const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `Nabore_Inventory_${new Date().toISOString().slice(0,19)}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        showToast("Inventory CSV exported");
+    async function editProduct(id) {
+        const p = products.find(p => p.id === id);
+        if(p) {
+            editingProductId = id;
+            document.getElementById('prodName').value = p.name;
+            document.getElementById('prodType').value = p.type;
+            document.getElementById('prodBuyingPrice').value = p.buyingPrice || 0;
+            document.getElementById('prodSellingPrice').value = p.sellingPrice || p.price || 0;
+            document.getElementById('prodEditId').innerText = `Editing: ${p.name}`;
+        }
     }
-    document.getElementById('exportInventoryCsvBtn').onclick = exportInventoryToCSV;
+    document.getElementById('addProductBtn').onclick = async () => {
+        try {
+            const name = document.getElementById('prodName').value.trim();
+            const type = document.getElementById('prodType').value;
+            const buyingPrice = parseFloat(document.getElementById('prodBuyingPrice').value) || 0;
+            const sellingPrice = parseFloat(document.getElementById('prodSellingPrice').value);
+            if (!name) { showToast("❌ Product name required"); return; }
+            if (isNaN(sellingPrice) || sellingPrice <= 0) { showToast("❌ Valid selling price >0 required"); return; }
+            await addDoc(collection(db, "products"), { name, type, buyingPrice, sellingPrice, createdAt: new Date() });
+            showToast("✅ Product added"); clearProductForm();
+        } catch(err) { showToast("❌ Add failed: "+err.message); }
+    };
+    document.getElementById('updateProductBtn').onclick = async () => {
+        if(!editingProductId) { showToast("No product selected to update"); return; }
+        const name = document.getElementById('prodName').value.trim();
+        const type = document.getElementById('prodType').value;
+        const buyingPrice = parseFloat(document.getElementById('prodBuyingPrice').value) || 0;
+        const sellingPrice = parseFloat(document.getElementById('prodSellingPrice').value);
+        if (!name || isNaN(sellingPrice) || sellingPrice<=0) { showToast("Invalid data"); return; }
+        try { await updateDoc(doc(db, "products", editingProductId), { name, type, buyingPrice, sellingPrice, updatedAt: new Date() }); showToast("✅ Updated"); clearProductForm(); } catch(err) { showToast("❌ Update failed"); }
+    };
+    function clearProductForm() { document.getElementById('prodName').value = ''; document.getElementById('prodBuyingPrice').value = ''; document.getElementById('prodSellingPrice').value = ''; editingProductId = null; document.getElementById('prodEditId').innerText = ''; }
+    document.getElementById('cancelProductEdit').onclick = clearProductForm;
 
-    // Dashboard filter sync
-    document.getElementById('dashYearFilter').innerHTML = '<option value="all">All Years</option>';
-    document.getElementById('dashMonthFilter').innerHTML = '<option value="all">All Months</option>';
-    document.getElementById('dashWeekFilter').innerHTML = '<option value="all">All Weeks</option>';
-    document.getElementById('dashYearFilter').onchange = (e)=>{ currYear=e.target.value; updateDashboardCharts(); };
-    document.getElementById('dashMonthFilter').onchange = (e)=>{ currMonth=e.target.value; updateDashboardCharts(); };
-    document.getElementById('dashWeekFilter').onchange = (e)=>{ currWeek=e.target.value; updateDashboardCharts(); };
-    document.getElementById('dashResetFilters').onclick = ()=>{ currYear="all"; currMonth="all"; currWeek="all"; updateFiltersUI(); updateDashboardCharts(); };
+    // ========== STOCK ==========
+    async function renderStock() {
+        const tbody = document.getElementById('stockTableBody');
+        if(!stockItems.length) { tbody.innerHTML = '<tr><td colspan="5">No stock items</td></tr>'; document.getElementById('lowStockList').innerHTML = '<p>No low stock items.</p>'; return; }
+        let html = '', lowHtml = '<ul>';
+        stockItems.forEach(item => {
+            const isLow = item.quantity <= item.lowThreshold;
+            if(isLow) lowHtml += `<li>${escapeHtml(item.name)} (${item.quantity} left, below ${item.lowThreshold})</li>`;
+            html += `<tr>
+                <td>${escapeHtml(item.name)}</td>
+                <td class="${isLow?'low-stock':''}">${item.quantity}</td>
+                <td>${formatKES(item.price)}</td>
+                <td>${item.lowThreshold}</td>
+                <td><button class="editStock" data-id="${item.id}">✏️</button> <button class="deleteStock" data-id="${item.id}" style="background:#b91c1c;">🗑️</button></td>
+            </tr>`;
+        });
+        lowHtml += '</ul>';
+        tbody.innerHTML = html;
+        document.getElementById('lowStockList').innerHTML = lowHtml;
+        document.querySelectorAll('.editStock').forEach(btn => btn.addEventListener('click', () => editStock(btn.dataset.id)));
+        document.querySelectorAll('.deleteStock').forEach(async btn => { if(confirm("Delete stock?")) await deleteDoc(doc(db,"stock",btn.dataset.id)); });
+    }
+    async function editStock(id) {
+        const item = stockItems.find(i => i.id === id);
+        if(item) { editingStockId = id; document.getElementById('stockName').value = item.name; document.getElementById('stockQty').value = item.quantity; document.getElementById('stockPrice').value = item.price; document.getElementById('stockThreshold').value = item.lowThreshold; document.getElementById('stockEditId').innerText = `Editing: ${item.name}`; }
+    }
+    document.getElementById('addStockBtn').onclick = async () => {
+        const name = document.getElementById('stockName').value.trim(); if(!name) return; const qty = parseInt(document.getElementById('stockQty').value)||0; const price = parseFloat(document.getElementById('stockPrice').value)||0; const thresh = parseInt(document.getElementById('stockThreshold').value)||5; await addDoc(collection(db,"stock"),{name,quantity:qty,price,lowThreshold:thresh}); showToast("Stock added"); clearStockForm();
+    };
+    document.getElementById('updateStockBtn').onclick = async () => {
+        if(!editingStockId) return; const name = document.getElementById('stockName').value.trim(); const qty = parseInt(document.getElementById('stockQty').value); const price = parseFloat(document.getElementById('stockPrice').value); const thresh = parseInt(document.getElementById('stockThreshold').value); await updateDoc(doc(db,"stock",editingStockId),{name,quantity:qty,price,lowThreshold:thresh}); showToast("Stock updated"); clearStockForm();
+    };
+    function clearStockForm() { document.getElementById('stockName').value = ''; document.getElementById('stockQty').value = 0; document.getElementById('stockPrice').value = ''; editingStockId = null; document.getElementById('stockEditId').innerText = ''; }
+    document.getElementById('cancelStockEdit').onclick = clearStockForm;
+    document.getElementById('exportStockCsvBtn').onclick = () => { if(!stockItems.length) return; const headers = ["Name","Quantity","Price (KES)","Low Threshold"]; const rows = stockItems.map(i=>[i.name,i.quantity,i.price,i.lowThreshold]); const csv = [headers,...rows].map(r=>r.join(",")).join("\n"); const blob = new Blob([csv],{type:"text/csv"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Stock_${Date.now()}.csv`; a.click(); showToast("CSV exported"); };
 
-    function initApp(){
-        onSnapshot(query(collection(db,"sales"),orderBy("date","asc")), (snap)=>{ allSales=[]; snap.forEach(d=>allSales.push({id:d.id,date:d.id,...d.data()})); updateFiltersUI(); renderSalesTable(); updateDashboardCharts(); });
-        onSnapshot(collection(db,"inventory"), (snap)=>{ allInventory=[]; snap.forEach(d=>allInventory.push({id:d.id,...d.data()})); renderInventory(); });
-        document.getElementById('recordDate').valueAsDate = new Date();
+    // ========== EXPENSES ==========
+    let expenseYear = "all", expenseMonth = "all";
+    function loadExpensesWithFilters() { let filtered = [...expenses]; if(expenseYear !== "all") filtered = filtered.filter(e=>e.date.startsWith(expenseYear)); if(expenseMonth !== "all") filtered = filtered.filter(e=>new Date(e.date).getMonth()+1 === parseInt(expenseMonth)); renderExpensesTable(filtered); updateExpenseFiltersUI(); }
+    function renderExpensesTable(data) { const tbody = document.getElementById('expensesTableBody'); if(!data.length){tbody.innerHTML='<tr><td colspan="5">No expenses recorded</td></tr>';return;} let html=''; data.forEach(exp=>{html+=`<tr><td>${exp.date}</td><td>${escapeHtml(exp.category)}</td><td>${formatKES(exp.amount)}</td><td>${escapeHtml(exp.description||'-')}</td><td><button class="deleteExpense" data-id="${exp.id}" style="background:#b91c1c;">🗑️</button></td></tr>`;}); tbody.innerHTML=html; document.querySelectorAll('.deleteExpense').forEach(btn=>btn.addEventListener('click',async()=>{if(confirm("Delete expense?")) await deleteDoc(doc(db,"expenses",btn.dataset.id));})); }
+    function updateExpenseFiltersUI() { const years=[...new Set(expenses.map(e=>e.date.split('-')[0]))].sort(); const ySel=document.getElementById('expenseYearFilter'); ySel.innerHTML='<option value="all">All Years</option>'; years.forEach(y=>ySel.innerHTML+=`<option value="${y}">${y}</option>`); ySel.value=expenseYear; const mSel=document.getElementById('expenseMonthFilter'); mSel.innerHTML='<option value="all">All Months</option>'; for(let i=1;i<=12;i++)mSel.innerHTML+=`<option value="${i}">${i}</option>`; mSel.value=expenseMonth; }
+    document.getElementById('expenseYearFilter').onchange=e=>{expenseYear=e.target.value; loadExpensesWithFilters();};
+    document.getElementById('expenseMonthFilter').onchange=e=>{expenseMonth=e.target.value; loadExpensesWithFilters();};
+    document.getElementById('resetExpenseFilters').onclick=()=>{expenseYear="all";expenseMonth="all";loadExpensesWithFilters();};
+    document.getElementById('addExpenseBtn').onclick=async()=>{const date=document.getElementById('expenseDate').value;if(!date)return;const category=document.getElementById('expenseCategory').value.trim();const amount=parseFloat(document.getElementById('expenseAmount').value);const desc=document.getElementById('expenseDesc').value;if(!category||isNaN(amount))return;await addDoc(collection(db,"expenses"),{date,category,amount,description:desc});document.getElementById('expenseDate').valueAsDate=new Date();document.getElementById('expenseCategory').value='';document.getElementById('expenseAmount').value='';document.getElementById('expenseDesc').value='';showToast("Expense added");};
+    document.getElementById('exportExpensesCsv').onclick=()=>{if(!expenses.length)return;const headers=["Date","Category","Amount","Description"];const rows=expenses.map(e=>[e.date,e.category,e.amount,e.description]);const csv=[headers,...rows].map(r=>r.join(",")).join("\n");const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Expenses_${Date.now()}.csv`;a.click();};
+
+    // ========== POS ==========
+    function refreshProductSelect() {
+        const select = document.getElementById('posProductSelect');
+        select.innerHTML = '<option value="">-- Select product/service --</option>';
+        products.forEach(p => {
+            const selling = p.sellingPrice || p.price || 0;
+            select.innerHTML += `<option value="${p.id}" data-selling="${selling}" data-buying="${p.buyingPrice||0}" data-type="${p.type}" data-name="${p.name}">${escapeHtml(p.name)} (${p.type}) - ${formatKES(selling)}</option>`;
+        });
+    }
+    document.getElementById('posProductSelect').addEventListener('change',(e)=>{
+        const opt = e.target.selectedOptions[0];
+        if(opt && opt.value){
+            document.getElementById('posPrice').value = parseFloat(opt.dataset.selling);
+            document.getElementById('posCustomName').value = opt.dataset.name;
+        } else {
+            document.getElementById('posPrice').value = '';
+        }
+    });
+    function addToCart() {
+        const select = document.getElementById('posProductSelect');
+        let name = document.getElementById('posCustomName').value.trim();
+        let productId = null;
+        let sellingPrice = parseFloat(document.getElementById('posPrice').value);
+        let buyingPrice = 0;
+        let type = 'Product';
+        if(select.value) {
+            const selected = products.find(p=>p.id===select.value);
+            if(selected){
+                name = selected.name;
+                sellingPrice = selected.sellingPrice || selected.price || 0;
+                buyingPrice = selected.buyingPrice || 0;
+                type = selected.type;
+                productId = selected.id;
+            }
+        }
+        if(!name){ alert("Enter item name"); return; }
+        if(isNaN(sellingPrice)||sellingPrice<=0){ alert("Valid selling price required"); return; }
+        const qty = parseInt(document.getElementById('posQty').value);
+        if(isNaN(qty)||qty<1) return;
+        if(type==="Product" && productId){
+            const stockItem = stockItems.find(s=>s.name.toLowerCase()===name.toLowerCase());
+            if(stockItem && stockItem.quantity < qty){ alert(`Insufficient stock: only ${stockItem.quantity} left`); return; }
+        }
+        cart.push({name, qty, sellingPrice, buyingPrice, productId, type, total: qty * sellingPrice});
+        renderCart();
+        document.getElementById('posQty').value=1;
+        document.getElementById('posCustomName').value='';
+        document.getElementById('posPrice').value='';
+        document.getElementById('posProductSelect').value='';
+    }
+    function renderCart() {
+        const container = document.getElementById('cartItemsList');
+        if(cart.length===0){container.innerHTML='<div class="cart-item">Cart is empty</div>';document.getElementById('cartTotal').innerHTML='Total: KES 0.00';return;}
+        let html='',total=0;
+        cart.forEach((item,idx)=>{
+            total+=item.total;
+            html+=`<div class="cart-item"><span>${escapeHtml(item.name)}</span><span>${item.qty} x ${formatKES(item.sellingPrice)}</span><span>${formatKES(item.total)}</span><button class="remove-cart-item" data-idx="${idx}" style="background:#b91c1c; padding:0.2rem 0.6rem;">🗑️</button></div>`;
+        });
+        container.innerHTML=html;
+        document.getElementById('cartTotal').innerHTML=`Total: ${formatKES(total)}`;
+        document.querySelectorAll('.remove-cart-item').forEach(btn=>btn.addEventListener('click',()=>{const idx=parseInt(btn.dataset.idx);cart.splice(idx,1);renderCart();}));
+    }
+    document.getElementById('addToCartBtn').onclick=addToCart;
+    document.getElementById('clearCartBtn').onclick=()=>{cart=[];renderCart();};
+    async function completeSale() {
+        if(cart.length===0){alert("Cart empty");return;}
+        const clientNumber=document.getElementById('clientNumber').value.trim();
+        if(!clientNumber){alert("Client number required");return;}
+        const paymentMethod=document.getElementById('paymentMethod').value;
+        const total=cart.reduce((s,i)=>s+i.total,0);
+        const receiptNo=`NB-${Date.now()}`;
+        const batch=writeBatch(db);
+        for(const item of cart){
+            if(item.type==="Product"){
+                const stockItem = stockItems.find(s=>s.name.toLowerCase()===item.name.toLowerCase());
+                if(stockItem){
+                    const newQty = stockItem.quantity - item.qty;
+                    if(newQty<0){alert(`Stock insufficient for ${item.name}`);return;}
+                    batch.update(doc(db,"stock",stockItem.id),{quantity:newQty});
+                }
+            }
+        }
+        const transactionRef = doc(collection(db,"transactions"));
+        batch.set(transactionRef,{
+            receiptNo, clientNumber, paymentMethod,
+            items: cart.map(i => ({ name: i.name, qty: i.qty, sellingPrice: i.sellingPrice, buyingPrice: i.buyingPrice, type: i.type, total: i.total })),
+            total, date: new Date().toISOString(), userId: auth.currentUser?.uid
+        });
+        await batch.commit();
+        printReceipt({receiptNo,clientNumber,paymentMethod,items:cart,total,date:new Date()});
+        showToast("Sale completed & stock updated");
+        cart=[]; renderCart(); document.getElementById('clientNumber').value='';
+        setTimeout(()=>{onSnapshot(collection(db,"stock"),snap=>{stockItems=[];snap.forEach(d=>stockItems.push({id:d.id,...d.data()}));renderStock();refreshProductSelect();});},500);
+        loadRecentTransactions();
+        updateDashboard();
+    }
+    document.getElementById('completeSaleBtn').onclick=completeSale;
+    function printReceipt(sale) {
+        const win=window.open('','_blank');
+        let itemsHtml='';
+        sale.items.forEach(item=>{itemsHtml+=`<tr><td>${escapeHtml(item.name)}</td><td>${item.qty}</td><td>${formatKES(item.sellingPrice)}</td><td>${formatKES(item.total)}</td></tr>`;});
+        win.document.write(`<!DOCTYPE html><html><head><title>Receipt ${sale.receiptNo}</title><style>@page{size:A6;margin:1.2rem;}body{font-family:'Inter',monospace;background:white;margin:0;padding:0;display:flex;justify-content:center;align-items:center;min-height:100vh;}.receipt{max-width:100%;background:white;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.1);border:1px solid #e2e8f0;overflow:hidden;font-size:11px;}.receipt-header{background:#4169E1;color:white;padding:1rem;text-align:center;}.receipt-body{padding:1.2rem;}.info-row{display:flex;justify-content:space-between;border-bottom:1px dashed #e2e8f0;padding-bottom:0.4rem;margin-bottom:0.5rem;}.total-row{text-align:right;font-weight:bold;border-top:2px solid #4169E1;margin-top:0.8rem;padding-top:0.5rem;}.footer{text-align:center;font-size:0.6rem;margin-top:1rem;}</style></head><body><div class="receipt"><div class="receipt-header"><h2>📖 NABORE BOOKSHOP</h2><p>Your trusted bookstore</p></div><div class="receipt-body"><div class="info-row"><span><strong>Receipt #</strong> ${sale.receiptNo}</span><span><strong>Date</strong> ${new Date(sale.date).toLocaleString()}</span></div><div class="info-row"><span><strong>Client</strong> ${escapeHtml(sale.clientNumber)}</span><span><strong>Payment</strong> ${sale.paymentMethod}</span></div><table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="total-row">TOTAL: ${formatKES(sale.total)}</div><div class="footer">Thank you for shopping with us</div></div></div></body></html>`);
+        win.document.close();
+        win.print();
+    }
+
+    // ========== TRANSACTIONS ==========
+    async function loadRecentTransactions() {
+        const q = query(collection(db,"transactions"), orderBy("date","desc"));
+        const snap = await getDocs(q);
+        const tbody = document.getElementById('transactionsBody');
+        if(snap.empty){ tbody.innerHTML = '<tr><td colspan="6">No transactions</td></tr>'; return; }
+        let html='';
+        snap.forEach(doc=>{ const t=doc.data(); html+=`<tr><td>${new Date(t.date).toLocaleString()}</td><td>${escapeHtml(t.clientNumber)}</td><td>${t.paymentMethod}</td><td>${t.items.length} items</td><td>${formatKES(t.total)}</td><td><button class="reprintBtn" data-receipt='${JSON.stringify(t)}'>🖨️ Reprint</button></td></tr>`; });
+        tbody.innerHTML = html;
+        document.querySelectorAll('.reprintBtn').forEach(btn => btn.addEventListener('click',()=>{ const data=JSON.parse(btn.dataset.receipt); printReceipt({receiptNo:data.receiptNo,clientNumber:data.clientNumber,paymentMethod:data.paymentMethod,items:data.items.map(i=>({...i, sellingPrice: i.sellingPrice})),total:data.total,date:data.date}); }));
+    }
+    async function exportTransactionsToCSV() {
+        try {
+            const q = query(collection(db,"transactions"), orderBy("date","desc"));
+            const snap = await getDocs(q);
+            if(snap.empty){ showToast("No transactions to export"); return; }
+            const headers = ["Receipt No","Date","Client Number","Payment Method","Items (Name x Qty)","Total (KES)"];
+            const rows = [];
+            snap.forEach(doc => { const t=doc.data(); const itemsSummary = t.items.map(i=>`${i.name} x${i.qty}`).join("; "); rows.push([t.receiptNo, new Date(t.date).toLocaleString(), t.clientNumber, t.paymentMethod, itemsSummary, t.total.toFixed(2)]); });
+            const csvContent = [headers, ...rows].map(row=>row.join(",")).join("\n");
+            const blob = new Blob([csvContent], {type:"text/csv"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Nabore_Transactions_${new Date().toISOString().slice(0,19)}.csv`; a.click(); showToast("Transactions CSV exported");
+        } catch(err) { showToast("Export failed: "+err.message); }
+    }
+
+    // ========== DASHBOARD ==========
+    async function updateDashboard() {
+        const stockValue = stockItems.reduce((sum,i)=>sum+(i.quantity*i.price),0);
+        document.getElementById('totalStockValue').innerText = formatKES(stockValue);
+        let totalRevenue = 0;
+        let totalProfit = 0;
+        transactions.forEach(t => {
+            t.items.forEach(item => {
+                const revenue = item.total;
+                totalRevenue += revenue;
+                let cost = 0;
+                if(item.type === "Product") {
+                    cost = (item.buyingPrice || 0) * item.qty;
+                }
+                totalProfit += revenue - cost;
+            });
+        });
+        const totalExp = expenses.reduce((sum,e)=>sum+e.amount,0);
+        const netProfit = totalProfit - totalExp;
+        document.getElementById('totalSalesRevenue').innerText = formatKES(totalRevenue);
+        document.getElementById('totalExpensesDashboard').innerText = formatKES(totalExp);
+        document.getElementById('netProfitDashboard').innerText = formatKES(netProfit);
+        // trend chart
+        const last7 = [...Array(7)].map((_,i)=>{let d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10);}).reverse();
+        const salesByDay={}, expByDay={};
+        transactions.forEach(t=>{const day=t.date.slice(0,10);salesByDay[day]=(salesByDay[day]||0)+t.total;});
+        expenses.forEach(e=>{expByDay[e.date]=(expByDay[e.date]||0)+e.amount;});
+        const salesData=last7.map(d=>salesByDay[d]||0);
+        const expData=last7.map(d=>expByDay[d]||0);
+        if(trendChart)trendChart.destroy();
+        trendChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:last7,datasets:[{label:'Sales Revenue',data:salesData,borderColor:'#4169E1'},{label:'Expenses',data:expData,borderColor:'#e67e22'}]}});
+        const stockNames=stockItems.map(s=>s.name);
+        const stockValues=stockItems.map(s=>s.quantity*s.price);
+        if(pieChart)pieChart.destroy();
+        pieChart=new Chart(document.getElementById('stockPieChart'),{type:'pie',data:{labels:stockNames,datasets:[{data:stockValues,backgroundColor:'#4169E1'}]}});
+    }
+
+    function updateManagementFeatures() {
+        // Top selling products (by quantity)
+        const productSales = {};
+        transactions.forEach(t => {
+            t.items.forEach(item => {
+                if(item.type === "Product") {
+                    const name = item.name;
+                    if(!productSales[name]) productSales[name] = 0;
+                    productSales[name] += item.qty;
+                }
+            });
+        });
+        const sorted = Object.entries(productSales).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        const topDiv = document.getElementById('topSellingList');
+        if(sorted.length === 0) topDiv.innerHTML = '<p>No product sales yet.</p>';
+        else {
+            let html = '<ul>';
+            sorted.forEach(([name, qty]) => html += `<li>${escapeHtml(name)}: ${qty} sold</li>`);
+            html += '</ul>';
+            topDiv.innerHTML = html;
+        }
+        // Reorder suggestions based on low stock
+        const lowStockItems = stockItems.filter(i => i.quantity <= i.lowThreshold);
+        const reorderDiv = document.getElementById('reorderSuggestions');
+        if(lowStockItems.length === 0) reorderDiv.innerHTML = '<p>All stock levels are healthy.</p>';
+        else {
+            let html = '<ul>';
+            lowStockItems.forEach(i => html += `<li>${escapeHtml(i.name)}: only ${i.quantity} left (reorder ${i.lowThreshold * 2} units)</li>`);
+            html += '</ul>';
+            reorderDiv.innerHTML = html;
+        }
+    }
+
+    // ========== SALES HISTORY ==========
+    function renderSalesHistory() { const tbody = document.getElementById('salesHistoryBody'); if(!salesHistory.length){ tbody.innerHTML='<tr><td colspan="6">No sales records found.</td></tr>'; resetSalesHistoryStats(); return; } let totalServices=0,totalProduct=0,totalExpenses=0; let html=''; salesHistory.forEach(record=>{ const s=record.services||0; const p=record.product||0; const e=record.expenses||0; const net=s+p-e; totalServices+=s; totalProduct+=p; totalExpenses+=e; const img=record.image?`<img src="${record.image}" style="width:40px;height:40px;border-radius:8px;" onclick="window.open('${record.image}','_blank')">`:'—'; html+=`<tr><td>${record.date}</td><td>${formatKES(s)}</td><td>${formatKES(p)}</td><td>${formatKES(e)}</td><td>${formatKES(net)}</td><td>${img}</td></tr>`; }); tbody.innerHTML=html; document.getElementById('salesHistoryTotalServices').innerText=formatKES(totalServices); document.getElementById('salesHistoryTotalProduct').innerText=formatKES(totalProduct); document.getElementById('salesHistoryTotalExpenses').innerText=formatKES(totalExpenses); document.getElementById('salesHistoryNetProfit').innerText=formatKES(totalServices+totalProduct-totalExpenses); }
+    function resetSalesHistoryStats() { document.getElementById('salesHistoryTotalServices').innerText='KES 0.00'; document.getElementById('salesHistoryTotalProduct').innerText='KES 0.00'; document.getElementById('salesHistoryTotalExpenses').innerText='KES 0.00'; document.getElementById('salesHistoryNetProfit').innerText='KES 0.00'; }
+    function exportSalesHistoryToCSV() { if(!salesHistory.length){alert("No sales data to export.");return;} const headers=["Date","Services (KES)","Product Sales (KES)","Expenses (KES)","Net Profit (KES)","Has Image"]; const rows=salesHistory.map(rec=>{const s=rec.services||0,p=rec.product||0,e=rec.expenses||0; return [rec.date,s.toFixed(2),p.toFixed(2),e.toFixed(2),(s+p-e).toFixed(2),rec.image?"Yes":"No"];}); const csv=[headers,...rows].map(r=>r.join(",")).join("\n"); const blob=new Blob([csv],{type:"text/csv"}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`Nabore_Sales_History_${new Date().toISOString().slice(0,19)}.csv`; a.click(); showToast("CSV exported"); }
+
+    // ========== AI INSIGHTS ==========
+    let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
+    function maybeLoadApiKey() { const input = document.getElementById('geminiApiKey'); if(input && geminiApiKey) input.value = geminiApiKey; }
+    document.getElementById('saveApiKeyBtn').onclick = () => { const key = document.getElementById('geminiApiKey').value.trim(); if(key) { localStorage.setItem('geminiApiKey', key); geminiApiKey = key; showToast("API key saved locally"); } else { showToast("Please enter a valid API key"); } };
+    document.getElementById('getAiInsightsBtn').onclick = async () => {
+        const key = localStorage.getItem('geminiApiKey');
+        if(!key) { showToast("Please save your Gemini API key first"); return; }
+        if(!transactions.length && !stockItems.length && !expenses.length) { document.getElementById('aiResponse').innerHTML = "⚠️ Not enough data yet. Add some sales, stock, or expenses to get insights."; return; }
+        document.getElementById('aiResponse').innerHTML = "🤔 AI is thinking... (usually takes 3-5 seconds)";
+        const last7Trans = [...transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,7);
+        const lowStock = stockItems.filter(i=>i.quantity <= i.lowThreshold).map(i=>`${i.name} (${i.quantity} left)`);
+        const recentExpenses = [...expenses].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+        let totalProfit = 0;
+        transactions.forEach(t => { t.items.forEach(item => { const revenue = item.total; const cost = (item.type === "Product" ? (item.buyingPrice||0) * item.qty : 0); totalProfit += revenue - cost; }); });
+        const totalExp = expenses.reduce((s,e)=>s+e.amount,0);
+        const netProfit = totalProfit - totalExp;
+        const prompt = `You are a business analyst for Nabore Bookshop. Based on the following data, give a short, actionable business insight (max 150 words). Include: 1) sales trend, 2) stock alerts, 3) expense advice, 4) one prediction for next week.
+Data:
+- Last 7 transactions total revenue: KES ${last7Trans.reduce((s,t)=>s+t.total,0).toFixed(2)}
+- Low stock items: ${lowStock.length ? lowStock.join(", ") : "none"}
+- Recent expenses: ${recentExpenses.map(e=>`${e.category} ${e.amount}`).join(", ") || "none"}
+- Net profit (after product costs and expenses): ${netProfit.toFixed(2)}
+Write in a friendly, professional tone.`;
+        try {
+            const genAI = new GoogleGenerativeAI(key);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const result = await model.generateContent(prompt);
+            const text = await result.response.text();
+            document.getElementById('aiResponse').innerHTML = `✨ <strong>AI Insights</strong><br>${text.replace(/\n/g,'<br>')}`;
+        } catch(err) { console.error(err); document.getElementById('aiResponse').innerHTML = `❌ AI error: ${err.message}. Check your API key and internet connection.`; }
+    };
+
+    // ========== CHARTS ==========
+    let trendChart=null,pieChart=null;
+
+    // ========== INIT ==========
+    function initApp() {
+        onSnapshot(collection(db,"products"), snap=>{products=[];snap.forEach(d=>products.push({id:d.id,...d.data()}));renderProducts();refreshProductSelect();});
+        onSnapshot(collection(db,"stock"), snap=>{stockItems=[];snap.forEach(d=>stockItems.push({id:d.id,...d.data()}));renderStock();if(panes.dashboard.classList.contains('active')){updateDashboard();updateManagementFeatures();}});
+        onSnapshot(collection(db,"expenses"), snap=>{expenses=[];snap.forEach(d=>expenses.push({id:d.id,...d.data()}));loadExpensesWithFilters();if(panes.dashboard.classList.contains('active'))updateDashboard();});
+        onSnapshot(collection(db,"transactions"), snap=>{transactions=[];snap.forEach(d=>transactions.push({id:d.id,...d.data()}));loadRecentTransactions();if(panes.dashboard.classList.contains('active')){updateDashboard();updateManagementFeatures();}});
+        onSnapshot(query(collection(db,"sales"), orderBy("date","asc")), snap=>{salesHistory=[];snap.forEach(doc=>{salesHistory.push({id:doc.id,...doc.data()});});renderSalesHistory();});
+        document.getElementById('expenseDate').valueAsDate=new Date();
+        refreshProductSelect();
+        updateDashboard();
+        updateManagementFeatures();
+        document.getElementById('exportSalesHistoryCsv').onclick=exportSalesHistoryToCSV;
+        document.getElementById('exportTransactionsCsv').onclick=exportTransactionsToCSV;
+        maybeLoadApiKey();
+    }
+</script>
+<script>
+    // Register service worker for PWA (optional but recommended)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').then(reg => console.log('SW registered', reg)).catch(err => console.log('SW registration failed', err));
     }
 </script>
 </body>
