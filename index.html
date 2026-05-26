@@ -21,9 +21,10 @@
             box-sizing: border-box;
         }
 
+        /* Light blue background for the whole app */
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: #f8fafc;
+            background: #d4e6f1;  /* soft light blue */
             color: #1e293b;
             padding: 0.8rem;
             line-height: 1.5;
@@ -40,7 +41,7 @@
             flex-wrap: nowrap;
             overflow-x: auto;
             gap: 0.3rem;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid #cbd5e1;
             margin-bottom: 1.5rem;
             background: white;
             border-radius: 2rem 2rem 0 0;
@@ -55,7 +56,7 @@
             padding: 0.6rem 1rem;
             font-size: 0.85rem;
             font-weight: 600;
-            color: #5b6e8c;
+            color: #1e3a8a;
             cursor: pointer;
             border-radius: 2rem;
             transition: 0.2s;
@@ -64,7 +65,7 @@
 
         .tab-btn.active {
             color: #4169E1;
-            background: #eff6ff;
+            background: #eef3ff;
             border-bottom: 3px solid #4169E1;
         }
 
@@ -166,6 +167,12 @@
         button:hover {
             background: #2b4fc7;
             transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-outline {
@@ -360,7 +367,7 @@
         <button id="loginBtn">Sign In</button>
         <button id="signupBtn" class="btn-outline">Create Account</button>
     </div>
-    <div id="authErrorMsg" style="color:#b91c1c; font-size:0.8rem; margin-top:1rem;"></div>
+    <div id="authErrorMsg" style="color:#b91c1c; font-size:0.8rem; margin-top:1rem; min-height: 2rem;"></div>
 </div>
 
 <div id="mainContent" style="display:none;">
@@ -535,7 +542,7 @@
                 <div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="salesHistoryNetProfit">KES 0.00</div></div>
             </div>
             <div class="table-wrapper">
-                <table id="salesHistoryTable"><thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th></tr></thead><tbody id="salesHistoryBody"><tr><td colspan="6">Loading...</tbody></table>
+                <table id="salesHistoryTable"><thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th></tr></thead><tbody id="salesHistoryBody"><td><td colspan="6">Loading...</tbody></table>
             </div>
         </div>
     </div>
@@ -554,16 +561,17 @@
     const getDocs = firestoreGetDocs;
 
     // Firebase configuration (shared demo – replace with your own if needed)
-    const firebaseConfig = {
-        apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
-        authDomain: "nabore-bookshop.firebaseapp.com",
-        databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "nabore-bookshop",
-        storageBucket: "nabore-bookshop.firebasestorage.app",
-        messagingSenderId: "619207980890",
-        appId: "1:619207980890:web:c680907f519b3d6efa2563",
-        measurementId: "G-YKNGLT2VLT"
-    };
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
+  authDomain: "nabore-bookshop.firebaseapp.com",
+  databaseURL: "https://nabore-bookshop-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "nabore-bookshop",
+  storageBucket: "nabore-bookshop.firebasestorage.app",
+  messagingSenderId: "619207980890",
+  appId: "1:619207980890:web:c680907f519b3d6efa2563",
+  measurementId: "G-YKNGLT2VLT"
+};
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -587,14 +595,64 @@
     function formatKES(v) { return `KES ${v.toFixed(2)}`; }
     function escapeHtml(str) { return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
-    // Authentication
-    onAuthStateChanged(auth, (user) => {
-        if (user) { loginDiv.style.display = 'none'; mainDiv.style.display = 'block'; initApp(); }
-        else { loginDiv.style.display = 'block'; mainDiv.style.display = 'none'; }
-    });
-    document.getElementById('loginBtn').onclick = async () => { try { await signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); authError.innerText=''; } catch(e) { authError.innerText=e.message; } };
-    document.getElementById('signupBtn').onclick = async () => { try { await createUserWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); } catch(e) { authError.innerText=e.message; } };
+    // Improved login / signup with error handling
+    async function handleAuth(action, email, password, button) {
+        if (!email || !password) {
+            authError.innerText = "❌ Please enter both email and password.";
+            return false;
+        }
+        const originalText = button.innerText;
+        button.disabled = true;
+        button.innerText = "Loading...";
+        authError.innerText = "";
+        try {
+            if (action === 'login') {
+                await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                await createUserWithEmailAndPassword(auth, email, password);
+            }
+            return true;
+        } catch (error) {
+            let friendlyMessage = error.message;
+            if (error.code === 'auth/invalid-email') friendlyMessage = "Invalid email format.";
+            else if (error.code === 'auth/user-not-found') friendlyMessage = "No account found with this email.";
+            else if (error.code === 'auth/wrong-password') friendlyMessage = "Incorrect password.";
+            else if (error.code === 'auth/email-already-in-use') friendlyMessage = "Email already registered. Try logging in.";
+            else if (error.code === 'auth/weak-password') friendlyMessage = "Password should be at least 6 characters.";
+            else friendlyMessage = error.message;
+            authError.innerText = `❌ ${friendlyMessage}`;
+            return false;
+        } finally {
+            button.disabled = false;
+            button.innerText = originalText;
+        }
+    }
+
+    document.getElementById('loginBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        await handleAuth('login', email, password, document.getElementById('loginBtn'));
+    };
+    document.getElementById('signupBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        await handleAuth('signup', email, password, document.getElementById('signupBtn'));
+    };
     document.getElementById('logoutMainBtn').onclick = () => signOut(auth);
+
+    // Authentication state observer
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loginDiv.style.display = 'none';
+            mainDiv.style.display = 'block';
+            initApp();
+        } else {
+            loginDiv.style.display = 'block';
+            mainDiv.style.display = 'none';
+            // Clear error on logout/initial load
+            authError.innerText = "";
+        }
+    });
 
     // Tab switching
     const tabs = document.querySelectorAll('.tab-btn');
@@ -821,7 +879,7 @@
     function printReceipt(sale) {
         const win=window.open('','_blank');
         let itemsHtml='';
-        sale.items.forEach(item=>{itemsHtml+=`<tr><td>${escapeHtml(item.name)}</td><td>${item.qty}</td><td>${formatKES(item.sellingPrice)}</td><td>${formatKES(item.total)}</td></tr>`;});
+        sale.items.forEach(item=>{itemsHtml+=`<tr><td>${escapeHtml(item.name)}</td><td>${item.qty}</td><td>${formatKES(item.sellingPrice)}</td><td>${formatKES(item.total)}</td>`;});
         win.document.write(`<!DOCTYPE html><html><head><title>Receipt ${sale.receiptNo}</title><style>@page{size:A6;margin:1.2rem;}body{font-family:'Inter',monospace;background:white;margin:0;padding:0;display:flex;justify-content:center;align-items:center;min-height:100vh;}.receipt{max-width:100%;background:white;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.1);border:1px solid #e2e8f0;overflow:hidden;font-size:11px;}.receipt-header{background:#4169E1;color:white;padding:1rem;text-align:center;}.receipt-body{padding:1.2rem;}.info-row{display:flex;justify-content:space-between;border-bottom:1px dashed #e2e8f0;padding-bottom:0.4rem;margin-bottom:0.5rem;}.total-row{text-align:right;font-weight:bold;border-top:2px solid #4169E1;margin-top:0.8rem;padding-top:0.5rem;}.footer{text-align:center;font-size:0.6rem;margin-top:1rem;}</style></head><body><div class="receipt"><div class="receipt-header"><h2>📖 NABORE BOOKSHOP</h2><p>Your trusted bookstore</p></div><div class="receipt-body"><div class="info-row"><span><strong>Receipt #</strong> ${sale.receiptNo}</span><span><strong>Date</strong> ${new Date(sale.date).toLocaleString()}</span></div><div class="info-row"><span><strong>Client</strong> ${escapeHtml(sale.clientNumber)}</span><span><strong>Payment</strong> ${sale.paymentMethod}</span></div><table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="total-row">TOTAL: ${formatKES(sale.total)}</div><div class="footer">Thank you for shopping with us</div></div></div></body></html>`);
         win.document.close();
         win.print();
@@ -834,7 +892,7 @@
         const tbody = document.getElementById('transactionsBody');
         if(snap.empty){ tbody.innerHTML = '<tr><td colspan="6">No transactions</td></tr>'; return; }
         let html='';
-        snap.forEach(doc=>{ const t=doc.data(); html+=`<tr><td>${new Date(t.date).toLocaleString()}</td><td>${escapeHtml(t.clientNumber)}</td><td>${t.paymentMethod}</td><td>${t.items.length} items</td><td>${formatKES(t.total)}</td><td><button class="reprintBtn" data-receipt='${JSON.stringify(t)}'>🖨️ Reprint</button></td></tr>`; });
+        snap.forEach(doc=>{ const t=doc.data(); html+=`<tr><td>${new Date(t.date).toLocaleString()}</td><td>${escapeHtml(t.clientNumber)}</td><td>${t.paymentMethod}</td><td>${t.items.length} items</td><td>${formatKES(t.total)}</td><td><button class="reprintBtn" data-receipt='${JSON.stringify(t)}'>🖨️ Reprint</button></td>`; });
         tbody.innerHTML = html;
         document.querySelectorAll('.reprintBtn').forEach(btn => btn.addEventListener('click',()=>{ const data=JSON.parse(btn.dataset.receipt); printReceipt({receiptNo:data.receiptNo,clientNumber:data.clientNumber,paymentMethod:data.paymentMethod,items:data.items.map(i=>({...i, sellingPrice: i.sellingPrice})),total:data.total,date:data.date}); }));
     }
@@ -922,7 +980,7 @@
     }
 
     // ========== SALES HISTORY ==========
-    function renderSalesHistory() { const tbody = document.getElementById('salesHistoryBody'); if(!salesHistory.length){ tbody.innerHTML='<tr><td colspan="6">No sales records found.</td></tr>'; resetSalesHistoryStats(); return; } let totalServices=0,totalProduct=0,totalExpenses=0; let html=''; salesHistory.forEach(record=>{ const s=record.services||0; const p=record.product||0; const e=record.expenses||0; const net=s+p-e; totalServices+=s; totalProduct+=p; totalExpenses+=e; const img=record.image?`<img src="${record.image}" style="width:40px;height:40px;border-radius:8px;" onclick="window.open('${record.image}','_blank')">`:'—'; html+=`<tr><td>${record.date}</td><td>${formatKES(s)}</td><td>${formatKES(p)}</td><td>${formatKES(e)}</td><td>${formatKES(net)}</td><td>${img}</td></tr>`; }); tbody.innerHTML=html; document.getElementById('salesHistoryTotalServices').innerText=formatKES(totalServices); document.getElementById('salesHistoryTotalProduct').innerText=formatKES(totalProduct); document.getElementById('salesHistoryTotalExpenses').innerText=formatKES(totalExpenses); document.getElementById('salesHistoryNetProfit').innerText=formatKES(totalServices+totalProduct-totalExpenses); }
+    function renderSalesHistory() { const tbody = document.getElementById('salesHistoryBody'); if(!salesHistory.length){ tbody.innerHTML='<tr><td colspan="6">No sales records found.</td></tr>'; resetSalesHistoryStats(); return; } let totalServices=0,totalProduct=0,totalExpenses=0; let html=''; salesHistory.forEach(record=>{ const s=record.services||0; const p=record.product||0; const e=record.expenses||0; const net=s+p-e; totalServices+=s; totalProduct+=p; totalExpenses+=e; const img=record.image?`<img src="${record.image}" style="width:40px;height:40px;border-radius:8px;" onclick="window.open('${record.image}','_blank')">`:'—'; html+=`<tr><td>${record.date}</td><td>${formatKES(s)}</td><td>${formatKES(p)}</td><td>${formatKES(e)}</td><td>${formatKES(net)}</td><td>${img}</td>`; }); tbody.innerHTML=html; document.getElementById('salesHistoryTotalServices').innerText=formatKES(totalServices); document.getElementById('salesHistoryTotalProduct').innerText=formatKES(totalProduct); document.getElementById('salesHistoryTotalExpenses').innerText=formatKES(totalExpenses); document.getElementById('salesHistoryNetProfit').innerText=formatKES(totalServices+totalProduct-totalExpenses); }
     function resetSalesHistoryStats() { document.getElementById('salesHistoryTotalServices').innerText='KES 0.00'; document.getElementById('salesHistoryTotalProduct').innerText='KES 0.00'; document.getElementById('salesHistoryTotalExpenses').innerText='KES 0.00'; document.getElementById('salesHistoryNetProfit').innerText='KES 0.00'; }
     function exportSalesHistoryToCSV() { if(!salesHistory.length){alert("No sales data to export.");return;} const headers=["Date","Services (KES)","Product Sales (KES)","Expenses (KES)","Net Profit (KES)","Has Image"]; const rows=salesHistory.map(rec=>{const s=rec.services||0,p=rec.product||0,e=rec.expenses||0; return [rec.date,s.toFixed(2),p.toFixed(2),e.toFixed(2),(s+p-e).toFixed(2),rec.image?"Yes":"No"];}); const csv=[headers,...rows].map(r=>r.join(",")).join("\n"); const blob=new Blob([csv],{type:"text/csv"}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`Nabore_Sales_History_${new Date().toISOString().slice(0,19)}.csv`; a.click(); showToast("CSV exported"); }
 
