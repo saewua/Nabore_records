@@ -4,152 +4,232 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#4169E1">
-    <title>Nabore Bookshop · Complete Working System</title>
+    <title>Nabore Bookshop </title>
+    <!-- Chart.js & SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+                "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+                "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+                "@google/generative-ai": "https://esm.run/@google/generative-ai"
+            }
+        }
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: #d4e6f1; color: #1e293b; padding: 0.8rem; line-height: 1.5; }
-        .app-container { max-width: 1400px; margin: 0 auto; }
-        .tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 0.3rem; border-bottom: 2px solid #cbd5e1; margin-bottom: 1.5rem; background: white; border-radius: 2rem 2rem 0 0; padding: 0.3rem 0.5rem; }
-        .tab-btn { background: transparent; border: none; padding: 0.6rem 1rem; font-size: 0.85rem; font-weight: 600; color: #1e3a8a; cursor: pointer; border-radius: 2rem; white-space: nowrap; }
-        .tab-btn.active { color: #4169E1; background: #eef3ff; border-bottom: 3px solid #4169E1; }
-        .tab-pane { display: none; animation: fadeIn 0.2s; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(145deg, #e6f0fa 0%, #cfe2f0 100%);
+            color: #0a2540;
+            padding: 1rem;
+            min-height: 100vh;
+        }
+        .app-container { max-width: 1440px; margin: 0 auto; }
+        .card {
+            background: rgba(255,255,255,0.94);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255,255,255,0.6);
+            padding: 1.2rem;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12); }
+        .tabs {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(8px);
+            border-radius: 3rem;
+            padding: 0.4rem;
+            margin-bottom: 1.8rem;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 0.7rem 1.3rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #2c3e66;
+            cursor: pointer;
+            border-radius: 2rem;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: #4169E1;
+            color: white;
+            box-shadow: 0 4px 10px rgba(65,105,225,0.3);
+        }
+        .tab-pane { display: none; animation: fadeIn 0.25s ease; }
         .tab-pane.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .card { background: white; border-radius: 1.5rem; border: 1px solid #eef2f6; padding: 1rem; margin-bottom: 1.2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.8rem; margin-bottom: 1.2rem; }
-        .stat-card { padding: 0.8rem; }
-        .stat-value { font-size: 1.4rem; font-weight: 800; color: #0f2b3d; }
-        .form-row { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: flex-end; margin-bottom: 1rem; }
-        .input-group { flex: 1 1 140px; min-width: 120px; }
-        .input-group label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #4169E1; display: block; margin-bottom: 0.2rem; }
-        .input-group input, .input-group select { width: 100%; padding: 0.6rem 0.8rem; border-radius: 2rem; border: 1.5px solid #e2e8f0; background: #fff; font-size: 0.9rem; }
-        button { background: #4169E1; border: none; border-radius: 2rem; padding: 0.6rem 1rem; font-weight: 600; color: white; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.85rem; }
-        button:hover { background: #2b4fc7; transform: translateY(-1px); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .form-row { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: flex-end; margin-bottom: 1.2rem; }
+        .input-group { flex: 1 1 150px; min-width: 130px; }
+        .input-group label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #4169E1; letter-spacing: 0.5px; margin-bottom: 0.25rem; display: block; }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border-radius: 2rem;
+            border: 1.5px solid #e2edf7;
+            background: white;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: #4169E1; box-shadow: 0 0 0 3px rgba(65,105,225,0.2); }
+        button {
+            background: #4169E1;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.7rem 1.4rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+        button:hover { background: #2b4fc7; transform: translateY(-1px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
         .btn-outline { background: transparent; border: 1.5px solid #4169E1; color: #4169E1; }
-        .btn-outline:hover { background: #eef3ff; transform: none; }
-        .btn-danger { background: #b91c1c; }
-        .btn-success { background: #2b5e3b; }
-        .table-wrapper { overflow-x: auto; margin-bottom: 1rem; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 600px; }
-        th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #f0f2f5; }
-        th { background: #f9fbfd; color: #1e3a8a; }
-        .cart-item { display: flex; justify-content: space-between; border-bottom: 1px solid #eef2f6; padding: 0.6rem; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
-        .cart-total { font-weight: bold; font-size: 1.1rem; text-align: right; margin-top: 0.8rem; }
-        .toast { position: fixed; bottom: 1rem; right: 1rem; background: #2b5e3b; color: white; padding: 0.5rem 1rem; border-radius: 2rem; z-index: 1000; opacity: 0; transition: 0.2s; pointer-events: none; font-size: 0.8rem; }
+        .btn-outline:hover { background: #eef3ff; }
+        .btn-success { background: #059669; }
+        .btn-danger { background: #dc2626; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { text-align: center; background: linear-gradient(135deg, #ffffff, #f8fafc); }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: #1e3a8a; margin-top: 0.3rem; }
+        .table-wrapper { overflow-x: auto; border-radius: 1.5rem; background: white; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid #eef2f8; }
+        th { background: #f9fbfe; color: #1e3a8a; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; background: #f9fafb; border-radius: 2rem; padding: 0.6rem 1rem; margin-bottom: 0.5rem; }
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: #1f2937; color: white; padding: 0.75rem 1.5rem; border-radius: 3rem; z-index: 1100; opacity: 0; transition: 0.2s; pointer-events: none; font-weight: 500; }
         .toast.show { opacity: 1; }
-        .ai-response { background: #f0f7ff; border-left: 4px solid #4169E1; padding: 0.8rem; margin-top: 1rem; border-radius: 1rem; white-space: pre-wrap; }
-        .low-stock { background: #fee2e2; font-weight: 500; }
-        #loginContainer { max-width: 400px; margin: 10vh auto; background: white; border-radius: 2rem; padding: 1.5rem; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .table-img { width: 40px; height: 40px; border-radius: 8px; cursor: pointer; object-fit: cover; }
-        @media (max-width: 640px) { .stat-value { font-size: 1.2rem; } .form-row { flex-direction: column; align-items: stretch; } button { width: 100%; } }
+        .ai-response { background: linear-gradient(135deg, #eef2ff, #ffffff); border-left: 5px solid #4169E1; padding: 1rem; border-radius: 1.5rem; margin-top: 1rem; }
+        .low-stock { background: #fee2e2; font-weight: 600; }
+        #loginContainer { max-width: 440px; margin: 12vh auto; background: white; border-radius: 2.5rem; padding: 2rem; text-align: center; box-shadow: 0 25px 40px rgba(0,0,0,0.15); }
+        .search-input { margin-bottom: 0.8rem; background: #f1f5f9; border-radius: 2rem; padding: 0.6rem 1rem; border: none; width: 100%; }
+        @media (max-width: 640px) { .stat-value { font-size: 1.4rem; } .form-row { flex-direction: column; } button { width: 100%; } }
     </style>
 </head>
 <body>
 <div id="loginContainer">
-    <h2>🔐 Nabore Bookshop</h2>
-    <p>Sign in to access POS & management</p>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPassword" placeholder="Password">
-    <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">
+    <h2 style="font-size: 1.8rem; background: linear-gradient(135deg,#4169E1,#1e3a8a); background-clip:text; -webkit-background-clip:text; color:transparent;">📖 Nabore</h2>
+    <p style="margin: 0.5rem 0 1rem;">Sign in to manage your shop</p>
+    <input type="email" id="loginEmail" placeholder="Email" value="admin@bookshop.com" style="width:100%; margin-bottom:0.8rem; padding:0.8rem; border-radius:2rem; border:1px solid #ddd;">
+    <input type="password" id="loginPassword" placeholder="Password" value="bookshop123" style="width:100%; margin-bottom:1rem; padding:0.8rem; border-radius:2rem; border:1px solid #ddd;">
+    <div style="display:flex; gap:0.8rem; justify-content:center;">
         <button id="loginBtn">Sign In</button>
         <button id="signupBtn" class="btn-outline">Create Account</button>
     </div>
     <div id="authErrorMsg" style="color:#b91c1c; font-size:0.8rem; margin-top:1rem;"></div>
-    <div id="authSuccessMsg" style="color:#2b5e3b; font-size:0.8rem;"></div>
 </div>
 
 <div id="mainContent" style="display:none;">
 <div class="app-container">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
-        <h1 style="font-size:1.5rem; background:linear-gradient(135deg,#4169E1,#1e3a8a); background-clip:text; -webkit-background-clip:text; color:transparent;">📖 Nabore Bookshop</h1>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; margin-bottom:1.2rem;">
+        <h1 style="font-size:1.8rem; background:linear-gradient(135deg,#1e3a8a,#4169E1); background-clip:text; -webkit-background-clip:text; color:transparent;">📖 Nabore Bookshop</h1>
         <button id="logoutMainBtn" class="btn-outline">🚪 Logout</button>
     </div>
-
     <div class="tabs">
         <button class="tab-btn active" data-tab="pos">🧾 POS</button>
-        <button class="tab-btn" data-tab="products">🛍️ Products</button>
-        <button class="tab-btn" data-tab="stock">📦 Stock</button>
+        <button class="tab-btn" data-tab="products">📦 Products</button>
+        <button class="tab-btn" data-tab="stock">📊 Stock</button>
         <button class="tab-btn" data-tab="expenses">💰 Expenses</button>
-        <button class="tab-btn" data-tab="dashboard">📊 Dashboard+AI</button>
+        <button class="tab-btn" data-tab="dashboard">📈 Dashboard+AI</button>
         <button class="tab-btn" data-tab="saleshistory">📅 Sales History</button>
     </div>
 
-    <!-- POS Tab -->
+    <!-- POS Tab (products displayed from Firestore) -->
     <div id="posTab" class="tab-pane active">
-        <div class="card">
-            <h3>New Sale</h3>
+        <div class="card"><h3>🛒 New Sale</h3>
             <div class="form-row">
-                <div class="input-group"><label>Product/Service</label><select id="posProductSelect"><option value="">-- Select --</option></select><input type="text" id="posCustomName" placeholder="Or custom item"></div>
+                <div class="input-group"><label>Product/Service</label><select id="posProductSelect"><option value="">-- Select from inventory --</option></select><input type="text" id="posCustomName" placeholder="Or custom item"></div>
                 <div class="input-group"><label>Qty</label><input type="number" id="posQty" value="1" min="1"></div>
-                <div class="input-group"><label>Selling Price</label><input type="number" id="posPrice" step="any"></div>
-                <div class="input-group"><button id="addToCartBtn">➕ Add</button></div>
+                <div class="input-group"><label>Selling Price (KES)</label><input type="number" id="posPrice" step="any"></div>
+                <div class="input-group"><button id="addToCartBtn">➕ Add to Cart</button></div>
             </div>
-            <div id="cartContainer" style="max-height:250px; overflow-y:auto;"><div id="cartItemsList"></div></div>
-            <div class="cart-total" id="cartTotal">Total: KES 0.00</div>
+            <div id="cartContainer" style="max-height:260px; overflow-y:auto;"><div id="cartItemsList"></div></div>
+            <div class="cart-total" id="cartTotal" style="font-size:1.3rem; font-weight:800; text-align:right; margin-top:1rem;">Total: KES 0.00</div>
             <div class="form-row">
-                <div class="input-group"><label>Client</label><input type="text" id="clientNumber" placeholder="Phone/ID"></div>
+                <div class="input-group"><label>Client (Phone/ID)</label><input type="text" id="clientNumber" placeholder="Required"></div>
                 <div class="input-group"><label>Payment</label><select id="paymentMethod"><option>Cash</option><option>M-Pesa</option></select></div>
-                <div class="input-group"><button id="completeSaleBtn" class="btn-success">Complete & Print</button></div>
-                <div class="input-group"><button id="clearCartBtn" class="btn-outline">Clear Cart</button></div>
+                <div class="input-group"><button id="completeSaleBtn" class="btn-success">✅ Complete & Print</button></div>
+                <div class="input-group"><button id="clearCartBtn" class="btn-outline">🗑️ Clear Cart</button></div>
             </div>
         </div>
-        <div class="card"><h3>Recent Transactions</h3><button id="exportTransactionsCsv" class="btn-outline">📎 Export CSV</button><div class="table-wrapper"><table id="transactionsTable"><thead><tr><th>Time</th><th>Client</th><th>Payment</th><th>Items</th><th>Total</th><th>Receipt</th></tr></thead><tbody id="transactionsBody"></tbody></table></div></div>
+        <div class="card"><h3>📋 Recent Transactions</h3><button id="exportTransactionsCsv" class="btn-outline">📎 Export CSV</button><div class="table-wrapper"><table id="transactionsTable"><thead>大学<th>Time</th><th>Client</th><th>Payment</th><th>Items</th><th>Total</th><th>Receipt</th></tr></thead><tbody id="transactionsBody"></tbody></table></div></div>
     </div>
 
     <!-- Products Tab -->
     <div id="productsTab" class="tab-pane">
-        <div class="card"><h3>Manage Products & Services</h3><div class="form-row"><div class="input-group"><label>Name</label><input type="text" id="prodName"></div><div class="input-group"><label>Type</label><select id="prodType"><option value="Product">Product</option><option value="Service">Service</option></select></div><div class="input-group"><label>Buying Price</label><input type="number" id="prodBuyingPrice" step="any"></div><div class="input-group"><label>Selling Price</label><input type="number" id="prodSellingPrice" step="any"></div><div class="input-group"><button id="addProductBtn">➕ Add</button></div><div class="input-group"><button id="updateProductBtn" style="background:#dc843a;">✏️ Update</button></div><div class="input-group"><button id="cancelProductEdit" class="btn-outline">Cancel</button></div></div><p id="prodEditId" style="font-size:0.7rem;"></p></div>
+        <div class="card"><h3>📦 Products & Services</h3>
+            <div class="form-row">
+                <div class="input-group"><label>Name</label><input type="text" id="prodName" placeholder="e.g. Novel"></div>
+                <div class="input-group"><label>Type</label><select id="prodType"><option>Product</option><option>Service</option></select></div>
+                <div class="input-group"><label>Buying Price</label><input type="number" id="prodBuyingPrice" step="any" placeholder="0"></div>
+                <div class="input-group"><label>Selling Price</label><input type="number" id="prodSellingPrice" step="any" placeholder="Required"></div>
+                <div class="input-group"><button id="addProductBtn">➕ Add New</button></div>
+                <div class="input-group"><button id="updateProductBtn" style="background:#e67e22;">✏️ Update</button></div>
+                <div class="input-group"><button id="cancelProductEdit" class="btn-outline">Cancel</button></div>
+            </div>
+            <p id="prodEditId" style="font-size:0.75rem; color:#4169E1;"></p>
+            <input type="text" id="productSearch" placeholder="🔍 Search products..." class="search-input">
+        </div>
         <div class="table-wrapper"><table id="productsTable"><thead><tr><th>Name</th><th>Type</th><th>Buying</th><th>Selling</th><th>Actions</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
     </div>
 
     <!-- Stock Tab -->
     <div id="stockTab" class="tab-pane">
-        <div class="card"><h3>Stock Items</h3><div class="form-row"><div class="input-group"><label>Name</label><input type="text" id="stockName"></div><div class="input-group"><label>Quantity</label><input type="number" id="stockQty" value="0"></div><div class="input-group"><label>Price</label><input type="number" id="stockPrice" step="any"></div><div class="input-group"><label>Low Threshold</label><input type="number" id="stockThreshold" value="5"></div><div class="input-group"><button id="addStockBtn">➕ Add</button></div><div class="input-group"><button id="updateStockBtn" style="background:#dc843a;">✏️ Update</button></div><div class="input-group"><button id="cancelStockEdit" class="btn-outline">Cancel</button></div></div><p id="stockEditId"></p><button id="exportStockCsvBtn" class="btn-outline">📎 Export CSV</button></div>
+        <div class="card"><h3>📦 Stock Items</h3><div class="form-row"><div class="input-group"><label>Name</label><input type="text" id="stockName"></div><div class="input-group"><label>Qty</label><input type="number" id="stockQty" value="0"></div><div class="input-group"><label>Price</label><input type="number" id="stockPrice" step="any"></div><div class="input-group"><label>Low Threshold</label><input type="number" id="stockThreshold" value="5"></div><div class="input-group"><button id="addStockBtn">➕ Add</button></div><div class="input-group"><button id="updateStockBtn" style="background:#e67e22;">✏️ Update</button></div><div class="input-group"><button id="cancelStockEdit" class="btn-outline">Cancel</button></div></div><p id="stockEditId"></p><button id="exportStockCsvBtn" class="btn-outline">📎 Export CSV</button><input type="text" id="stockSearch" placeholder="🔍 Search stock..." class="search-input"></div>
         <div class="table-wrapper"><table id="stockTable"><thead><tr><th>Name</th><th>Qty</th><th>Price</th><th>Low Stock</th><th>Actions</th></tr></thead><tbody id="stockTableBody"></tbody></table></div>
         <div class="card"><h4>⚠️ Low Stock Alerts</h4><div id="lowStockList"></div></div>
     </div>
 
     <!-- Expenses Tab -->
     <div id="expensesTab" class="tab-pane">
-        <div class="card"><h3>Record Expense</h3><div class="form-row"><div class="input-group"><label>Date</label><input type="date" id="expenseDate"></div><div class="input-group"><label>Category</label><input type="text" id="expenseCategory"></div><div class="input-group"><label>Amount</label><input type="number" id="expenseAmount" step="any"></div><div class="input-group"><label>Description</label><input type="text" id="expenseDesc"></div><div class="input-group"><button id="addExpenseBtn">➕ Add</button></div></div></div>
-        <div class="filter-bar" style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:0.5rem;"><span>Filter:</span><select id="expenseYearFilter"><option value="all">All Years</option></select><select id="expenseMonthFilter"><option value="all">All Months</option></select><button id="resetExpenseFilters" class="btn-outline">Reset</button><button id="exportExpensesCsv" class="btn-outline">Export CSV</button></div>
+        <div class="card"><h3>💸 Record Expense</h3><div class="form-row"><div class="input-group"><label>Date</label><input type="date" id="expenseDate"></div><div class="input-group"><label>Category</label><input type="text" id="expenseCategory"></div><div class="input-group"><label>Amount</label><input type="number" id="expenseAmount" step="any"></div><div class="input-group"><label>Description</label><input type="text" id="expenseDesc"></div><div class="input-group"><button id="addExpenseBtn">➕ Add</button></div></div></div>
+        <div class="filter-bar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem;"><span>📅 Filter:</span><select id="expenseYearFilter"><option value="all">All Years</option></select><select id="expenseMonthFilter"><option value="all">All Months</option></select><button id="resetExpenseFilters" class="btn-outline">Reset</button><button id="exportExpensesCsv" class="btn-outline">Export CSV</button></div>
         <div class="table-wrapper"><table id="expensesTable"><thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Description</th><th>Actions</th></tr></thead><tbody id="expensesTableBody"></tbody></table></div>
     </div>
 
-    <!-- Dashboard + AI Tab -->
+    <!-- Dashboard + AI -->
     <div id="dashboardTab" class="tab-pane">
-        <div class="dashboard-grid"><div class="card stat-card"><h3>Total Stock Value</h3><div class="stat-value" id="totalStockValue">KES 0.00</div></div><div class="card stat-card"><h3>Total Sales Revenue</h3><div class="stat-value" id="totalSalesRevenue">KES 0.00</div></div><div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="totalExpensesDashboard">KES 0.00</div></div><div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="netProfitDashboard">KES 0.00</div></div></div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem;"><div class="card"><h3>Sales & Expenses Trend</h3><canvas id="trendChart" style="max-height:250px;"></canvas></div><div class="card"><h3>Stock Value by Item</h3><canvas id="stockPieChart" style="max-height:250px;"></canvas></div></div>
+        <div class="dashboard-grid"><div class="card stat-card"><h3>📦 Stock Value</h3><div class="stat-value" id="totalStockValue">KES 0</div></div><div class="card stat-card"><h3>💰 Sales Revenue</h3><div class="stat-value" id="totalSalesRevenue">KES 0</div></div><div class="card stat-card"><h3>📉 Expenses</h3><div class="stat-value" id="totalExpensesDashboard">KES 0</div></div><div class="card stat-card"><h3>📈 Net Profit</h3><div class="stat-value" id="netProfitDashboard">KES 0</div></div></div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem;"><div class="card"><h3>📊 Trend (7d)</h3><canvas id="trendChart" style="max-height:240px;"></canvas></div><div class="card"><h3>🥧 Stock by Value</h3><canvas id="stockPieChart"></canvas></div></div>
         <div class="card"><h3>🏆 Top Selling Products</h3><div id="topSellingList"></div></div>
         <div class="card"><h3>🔄 Reorder Suggestions</h3><div id="reorderSuggestions"></div></div>
-        <div class="card"><h3>🤖 AI Insights (Gemini)</h3><div class="api-input"><input type="text" id="geminiApiKey" placeholder="Gemini API Key"><button id="saveApiKeyBtn" class="btn-outline">Save Key</button><button id="getAiInsightsBtn">Get Insights</button></div><div id="aiResponse" class="ai-response">💡 Get a free API key from Google AI Studio.</div></div>
+        <div class="card"><h3>🤖 AI Insights (Gemini)</h3><div style="display:flex; gap:0.5rem; flex-wrap:wrap;"><input type="text" id="geminiApiKey" placeholder="Gemini API Key" style="flex:2;"><button id="saveApiKeyBtn" class="btn-outline">Save Key</button><button id="getAiInsightsBtn">Get Insights</button></div><div id="aiResponse" class="ai-response">💡 Add your Gemini API key for smart suggestions.</div></div>
     </div>
 
-    <!-- Sales History Tab (with entry form) -->
+    <!-- Sales History -->
     <div id="saleshistoryTab" class="tab-pane">
-        <div class="card"><h3>Add / Edit Daily Sales</h3><div class="form-row"><div class="input-group"><label>Date</label><input type="date" id="salesHistoryDate"></div><div class="input-group"><label>Services</label><input type="number" id="salesHistoryServices" step="any" value="0"></div><div class="input-group"><label>Product</label><input type="number" id="salesHistoryProduct" step="any" value="0"></div><div class="input-group"><label>Expenses</label><input type="number" id="salesHistoryExpenses" step="any" value="0"></div><div class="input-group"><label>Image</label><input type="file" id="salesHistoryImage" accept="image/*"></div><div class="input-group"><button id="saveSalesHistoryBtn" class="btn-success">Save / Update</button></div><div class="input-group"><button id="resetSalesHistoryFormBtn" class="btn-outline">Reset</button></div></div><div id="salesHistoryPreviewArea"></div><p id="salesHistoryEditStatus"></p></div>
-        <div class="card"><div style="display:flex; justify-content:space-between;"><h3>Daily Records</h3><button id="exportSalesHistoryCsv" class="btn-outline">📎 CSV</button></div><div class="dashboard-grid" style="margin-bottom:1rem;"><div class="card stat-card"><h3>Total Services</h3><div class="stat-value" id="salesHistoryTotalServices">KES 0.00</div></div><div class="card stat-card"><h3>Total Product</h3><div class="stat-value" id="salesHistoryTotalProduct">KES 0.00</div></div><div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="salesHistoryTotalExpenses">KES 0.00</div></div><div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="salesHistoryNetProfit">KES 0.00</div></div></div><div class="table-wrapper"><table id="salesHistoryTable"><thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th><th>Actions</th></tr></thead><tbody id="salesHistoryBody"></tbody></table></div></div>
+        <div class="card"><h3>📅 Daily Financials</h3><div class="form-row"><div class="input-group"><label>Date</label><input type="date" id="salesHistoryDate"></div><div class="input-group"><label>Services (KES)</label><input type="number" id="salesHistoryServices" step="any" value="0"></div><div class="input-group"><label>Product (KES)</label><input type="number" id="salesHistoryProduct" step="any" value="0"></div><div class="input-group"><label>Expenses (KES)</label><input type="number" id="salesHistoryExpenses" step="any" value="0"></div><div class="input-group"><label>Image</label><input type="file" id="salesHistoryImage" accept="image/*"></div><div class="input-group"><button id="saveSalesHistoryBtn" class="btn-success">Save / Update</button></div><div class="input-group"><button id="resetSalesHistoryFormBtn" class="btn-outline">Reset</button></div></div><div id="salesHistoryPreviewArea"></div><p id="salesHistoryEditStatus"></p></div>
+        <div class="card"><div style="display:flex; justify-content:space-between;"><h3>📋 Daily Records</h3><button id="exportSalesHistoryCsv" class="btn-outline">CSV</button></div><div class="dashboard-grid"><div class="card stat-card"><h3>Total Services</h3><div class="stat-value" id="salesHistoryTotalServices">KES 0</div></div><div class="card stat-card"><h3>Total Product</h3><div class="stat-value" id="salesHistoryTotalProduct">KES 0</div></div><div class="card stat-card"><h3>Total Expenses</h3><div class="stat-value" id="salesHistoryTotalExpenses">KES 0</div></div><div class="card stat-card"><h3>Net Profit</h3><div class="stat-value" id="salesHistoryNetProfit">KES 0</div></div></div><div class="table-wrapper"><table id="salesHistoryTable"><thead><tr><th>Date</th><th>Services</th><th>Product</th><th>Expenses</th><th>Net</th><th>Image</th><th>Actions</th></tr></thead><tbody id="salesHistoryBody"></tbody></table></div></div>
     </div>
-
-    <footer style="text-align:center; font-size:0.7rem; margin-top:1rem;">Nabore Bookshop · Real‑time Firebase</footer>
+    <footer style="text-align:center; font-size:0.75rem; margin-top:1.5rem;">Nabore Bookshop · Firebase real‑time</footer>
 </div>
 </div>
 <div id="toast" class="toast">✓</div>
 
-<script type="importmap">
-    { "imports": { "@google/generative-ai": "https://esm.run/@google/generative-ai" } }
-</script>
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { initializeApp } from "firebase/app";
+    import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, writeBatch, getDocs } from "firebase/firestore";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
     import { GoogleGenerativeAI } from "@google/generative-ai";
 
-    // 🔥 REPLACE WITH YOUR FIREBASE CONFIG
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    // 🔥 REPLACE WITH YOUR FIREBASE CONFIGURATION
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
   authDomain: "nabore-bookshop.firebaseapp.com",
@@ -160,191 +240,302 @@ const firebaseConfig = {
   appId: "1:619207980890:web:c680907f519b3d6efa2563",
   measurementId: "G-YKNGLT2VLT"
 };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // DOM elements
+    // ---------- DOM elements ----------
     const loginDiv = document.getElementById('loginContainer');
     const mainDiv = document.getElementById('mainContent');
     const authError = document.getElementById('authErrorMsg');
-    const authSuccess = document.getElementById('authSuccessMsg');
 
-    // Data stores
-    let products = [], stockItems = [], expenses = [], transactions = [], salesHistory = [];
-    let editingProductId = null, editingStockId = null;
+    // Global data stores (live from Firestore)
+    let products = [];
+    let stockItems = [];
+    let expenses = [];
+    let transactions = [];
+    let salesHistory = [];
+
+    let editingProductId = null;
+    let editingStockId = null;
     let cart = [];
     let trendChart = null, pieChart = null;
     let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
     let salesHistoryImageDataUrl = null;
-    let editingSalesDate = null;
 
-    // Helpers
+    // Helper functions
     function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
-    function formatKES(v) { return `KES ${v.toFixed(2)}`; }
-    function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+    function formatKES(v) { return `KES ${(v || 0).toFixed(2)}`; }
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
 
-    // AUTH
-    async function handleAuth(action, email, password, button) {
-        if (!email || !password) { authError.innerText = "❌ Please enter email and password."; return false; }
-        const original = button.innerText;
-        button.disabled = true; button.innerText = "Loading...";
-        authError.innerText = ""; authSuccess.innerText = "";
+    // ---------- AUTH ----------
+    async function handleLogin() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const pwd = document.getElementById('loginPassword').value;
         try {
-            if (action === 'login') await signInWithEmailAndPassword(auth, email, password);
-            else await createUserWithEmailAndPassword(auth, email, password);
-            authSuccess.innerText = action === 'login' ? "✅ Login successful!" : "✅ Account created!";
-            return true;
+            await signInWithEmailAndPassword(auth, email, pwd);
         } catch (err) {
-            let msg = err.message;
-            if (err.code === 'auth/configuration-not-found') msg = "❌ Enable Email/Password in Firebase Console.";
-            else if (err.code === 'auth/invalid-email') msg = "❌ Invalid email.";
-            else if (err.code === 'auth/user-not-found') msg = "❌ No account. Sign up first.";
-            else if (err.code === 'auth/wrong-password') msg = "❌ Incorrect password.";
-            else if (err.code === 'auth/email-already-in-use') msg = "❌ Email already used. Try login.";
-            authError.innerText = msg;
-            return false;
-        } finally { button.disabled = false; button.innerText = original; }
+            authError.innerText = err.message;
+        }
     }
-    document.getElementById('loginBtn').onclick = () => handleAuth('login', document.getElementById('loginEmail').value.trim(), document.getElementById('loginPassword').value, document.getElementById('loginBtn'));
-    document.getElementById('signupBtn').onclick = () => handleAuth('signup', document.getElementById('loginEmail').value.trim(), document.getElementById('loginPassword').value, document.getElementById('signupBtn'));
+    async function handleSignup() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const pwd = document.getElementById('loginPassword').value;
+        try {
+            await createUserWithEmailAndPassword(auth, email, pwd);
+        } catch (err) {
+            authError.innerText = err.message;
+        }
+    }
+    document.getElementById('loginBtn').onclick = handleLogin;
+    document.getElementById('signupBtn').onclick = handleSignup;
     document.getElementById('logoutMainBtn').onclick = () => signOut(auth);
-    onAuthStateChanged(auth, (user) => { if (user) { loginDiv.style.display = 'none'; mainDiv.style.display = 'block'; initApp(); } else { loginDiv.style.display = 'block'; mainDiv.style.display = 'none'; } });
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loginDiv.style.display = 'none';
+            mainDiv.style.display = 'block';
+            initFirestoreListeners();
+        } else {
+            loginDiv.style.display = 'block';
+            mainDiv.style.display = 'none';
+        }
+    });
 
-    // ========== PRODUCTS ==========
-    async function renderProducts() {
+    // ---------- FIRESTORE LISTENERS (real-time) ----------
+    function initFirestoreListeners() {
+        // Products
+        onSnapshot(collection(db, "products"), (snap) => {
+            products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderProducts();
+            refreshProductSelect();  // update POS dropdown
+        });
+        // Stock
+        onSnapshot(collection(db, "stock"), (snap) => {
+            stockItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderStock();
+            updateDashboard();
+        });
+        // Expenses
+        onSnapshot(collection(db, "expenses"), (snap) => {
+            expenses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderExpensesFiltered();
+            updateExpenseFiltersUI();
+            updateDashboard();
+        });
+        // Transactions
+        onSnapshot(query(collection(db, "transactions"), orderBy("date", "desc")), (snap) => {
+            transactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            loadRecentTransactions();
+            updateDashboard();
+        });
+        // Sales History
+        onSnapshot(collection(db, "salesHistory"), (snap) => {
+            salesHistory = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderSalesHistory();
+        });
+        // initial dashboard & filters
+        updateExpenseFiltersUI();
+        updateDashboard();
+        document.getElementById('expenseDate').valueAsDate = new Date();
+    }
+
+    // ---------- PRODUCTS (CRUD) ----------
+    function renderProducts(filter = '') {
         const tbody = document.getElementById('productsTableBody');
-        if (!products.length) { tbody.innerHTML = '<tr><td colspan="5">No products</td></tr>'; return; }
+        let filtered = products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
+        if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="5">No products</td></tr>'; return; }
         let html = '';
-        products.forEach(p => {
+        filtered.forEach(p => {
             html += `<tr>
-                <td>${escapeHtml(p.name)}</td>
-                <td>${escapeHtml(p.type)}</td>
-                <td>${formatKES(p.buyingPrice || 0)}</td>
-                <td>${formatKES(p.sellingPrice || 0)}</td>
-                <td><button class="editProductBtn" data-id="${p.id}" style="background:#eef3ff;">✏️</button> <button class="deleteProductBtn" data-id="${p.id}" style="background:#b91c1c;">🗑️</button></td>
-            </tr>`;
+                        <td>${escapeHtml(p.name)}</td>
+                        <td>${p.type}</td>
+                        <td>${formatKES(p.buyingPrice || 0)}</td>
+                        <td>${formatKES(p.sellingPrice)}</td>
+                        <td><button class="editProductBtn" data-id="${p.id}">✏️</button> <button class="deleteProductBtn" data-id="${p.id}" class="btn-danger">🗑️</button></td>
+                    </tr>`;
         });
         tbody.innerHTML = html;
-        document.querySelectorAll('.editProductBtn').forEach(btn => btn.addEventListener('click', () => editProduct(btn.dataset.id)));
-        document.querySelectorAll('.deleteProductBtn').forEach(btn => btn.addEventListener('click', async () => { if (confirm("Delete product?")) await deleteDoc(doc(db, "products", btn.dataset.id)); showToast("Deleted"); }));
-    }
-    async function editProduct(id) {
-        const p = products.find(p => p.id === id);
-        if (p) {
-            editingProductId = id;
-            document.getElementById('prodName').value = p.name;
-            document.getElementById('prodType').value = p.type;
-            document.getElementById('prodBuyingPrice').value = p.buyingPrice || 0;
-            document.getElementById('prodSellingPrice').value = p.sellingPrice || 0;
-            document.getElementById('prodEditId').innerText = `Editing: ${p.name}`;
-        }
+        document.querySelectorAll('.editProductBtn').forEach(btn => btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            const p = products.find(x => x.id === id);
+            if (p) {
+                editingProductId = id;
+                document.getElementById('prodName').value = p.name;
+                document.getElementById('prodType').value = p.type;
+                document.getElementById('prodBuyingPrice').value = p.buyingPrice || 0;
+                document.getElementById('prodSellingPrice').value = p.sellingPrice;
+                document.getElementById('prodEditId').innerText = `✏️ Editing: ${p.name}`;
+            }
+        }));
+        document.querySelectorAll('.deleteProductBtn').forEach(btn => btn.addEventListener('click', async () => {
+            if (confirm('Delete product?')) {
+                await deleteDoc(doc(db, "products", btn.dataset.id));
+                showToast('Deleted');
+            }
+        }));
     }
     document.getElementById('addProductBtn').onclick = async () => {
         const name = document.getElementById('prodName').value.trim();
+        if (!name) return alert('Name required');
         const type = document.getElementById('prodType').value;
-        const buyingPrice = parseFloat(document.getElementById('prodBuyingPrice').value) || 0;
-        const sellingPrice = parseFloat(document.getElementById('prodSellingPrice').value);
-        if (!name || isNaN(sellingPrice) || sellingPrice <= 0) { alert("Name and valid selling price required"); return; }
-        await addDoc(collection(db, "products"), { name, type, buyingPrice, sellingPrice, createdAt: new Date() });
-        showToast("Product added");
-        document.getElementById('prodName').value = ''; document.getElementById('prodBuyingPrice').value = ''; document.getElementById('prodSellingPrice').value = '';
+        const buying = parseFloat(document.getElementById('prodBuyingPrice').value) || 0;
+        const selling = parseFloat(document.getElementById('prodSellingPrice').value);
+        if (isNaN(selling) || selling <= 0) return alert('Valid selling price required');
+        await addDoc(collection(db, "products"), { name, type, buyingPrice: buying, sellingPrice: selling, createdAt: new Date() });
+        clearProductForm();
+        showToast('Product added');
     };
     document.getElementById('updateProductBtn').onclick = async () => {
-        if (!editingProductId) { alert("No product selected for edit"); return; }
+        if (!editingProductId) return alert('Select a product to update');
         const name = document.getElementById('prodName').value.trim();
         const type = document.getElementById('prodType').value;
-        const buyingPrice = parseFloat(document.getElementById('prodBuyingPrice').value) || 0;
-        const sellingPrice = parseFloat(document.getElementById('prodSellingPrice').value);
-        if (!name || isNaN(sellingPrice) || sellingPrice <= 0) return;
-        await updateDoc(doc(db, "products", editingProductId), { name, type, buyingPrice, sellingPrice, updatedAt: new Date() });
-        showToast("Product updated");
-        editingProductId = null; document.getElementById('prodEditId').innerText = '';
-        document.getElementById('prodName').value = ''; document.getElementById('prodBuyingPrice').value = ''; document.getElementById('prodSellingPrice').value = '';
+        const buying = parseFloat(document.getElementById('prodBuyingPrice').value) || 0;
+        const selling = parseFloat(document.getElementById('prodSellingPrice').value);
+        if (!name || isNaN(selling) || selling <= 0) return alert('Invalid data');
+        await updateDoc(doc(db, "products", editingProductId), { name, type, buyingPrice: buying, sellingPrice: selling, updatedAt: new Date() });
+        clearProductForm();
+        showToast('Updated');
     };
-    document.getElementById('cancelProductEdit').onclick = () => { editingProductId = null; document.getElementById('prodEditId').innerText = ''; document.getElementById('prodName').value = ''; document.getElementById('prodBuyingPrice').value = ''; document.getElementById('prodSellingPrice').value = ''; };
+    document.getElementById('cancelProductEdit').onclick = clearProductForm;
+    function clearProductForm() {
+        editingProductId = null;
+        document.getElementById('prodName').value = '';
+        document.getElementById('prodType').value = 'Product';
+        document.getElementById('prodBuyingPrice').value = '';
+        document.getElementById('prodSellingPrice').value = '';
+        document.getElementById('prodEditId').innerText = '';
+    }
+    document.getElementById('productSearch')?.addEventListener('input', e => renderProducts(e.target.value));
 
-    // ========== STOCK ==========
-    async function renderStock() {
+    // ---------- STOCK (CRUD) ----------
+    function renderStock(filter = '') {
+        let filtered = stockItems.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
         const tbody = document.getElementById('stockTableBody');
-        if (!stockItems.length) { tbody.innerHTML = '<tr><td colspan="5">No stock items</td></tr>'; document.getElementById('lowStockList').innerHTML = '<p>No low stock</p>'; return; }
         let html = '', lowHtml = '<ul>';
-        stockItems.forEach(item => {
+        filtered.forEach(item => {
             const isLow = item.quantity <= item.lowThreshold;
-            if (isLow) lowHtml += `<li>${escapeHtml(item.name)} (${item.quantity} left, below ${item.lowThreshold})</li>`;
+            if (isLow) lowHtml += `<li>${escapeHtml(item.name)} (${item.quantity} left)</li>`;
             html += `<tr>
-                <td>${escapeHtml(item.name)}</td>
-                <td class="${isLow ? 'low-stock' : ''}">${item.quantity}</td>
-                <td>${formatKES(item.price)}</td>
-                <td>${item.lowThreshold}</td>
-                <td><button class="editStockBtn" data-id="${item.id}" style="background:#eef3ff;">✏️</button> <button class="deleteStockBtn" data-id="${item.id}" style="background:#b91c1c;">🗑️</button></td>
-            </tr>`;
+                        <td>${escapeHtml(item.name)}</td>
+                        <td class="${isLow ? 'low-stock' : ''}">${item.quantity}</td>
+                        <td>${formatKES(item.price)}</td>
+                        <td>${item.lowThreshold}</td>
+                        <td><button class="editStockBtn" data-id="${item.id}">✏️</button> <button class="deleteStockBtn" data-id="${item.id}" class="btn-danger">🗑️</button></td>
+                    </tr>`;
         });
-        lowHtml += '</ul>';
         tbody.innerHTML = html;
-        document.getElementById('lowStockList').innerHTML = lowHtml;
-        document.querySelectorAll('.editStockBtn').forEach(btn => btn.addEventListener('click', () => editStock(btn.dataset.id)));
-        document.querySelectorAll('.deleteStockBtn').forEach(btn => btn.addEventListener('click', async () => { if (confirm("Delete stock?")) await deleteDoc(doc(db, "stock", btn.dataset.id)); showToast("Deleted"); }));
+        document.getElementById('lowStockList').innerHTML = lowHtml + '</ul>';
+        document.querySelectorAll('.editStockBtn').forEach(btn => btn.addEventListener('click', () => {
+            const it = stockItems.find(i => i.id === btn.dataset.id);
+            if (it) {
+                editingStockId = it.id;
+                document.getElementById('stockName').value = it.name;
+                document.getElementById('stockQty').value = it.quantity;
+                document.getElementById('stockPrice').value = it.price;
+                document.getElementById('stockThreshold').value = it.lowThreshold;
+                document.getElementById('stockEditId').innerText = `Editing: ${it.name}`;
+            }
+        }));
+        document.querySelectorAll('.deleteStockBtn').forEach(btn => btn.addEventListener('click', async () => {
+            if (confirm('Delete stock item?')) {
+                await deleteDoc(doc(db, "stock", btn.dataset.id));
+                showToast('Deleted');
+            }
+        }));
     }
-    async function editStock(id) {
-        const item = stockItems.find(i => i.id === id);
-        if (item) {
-            editingStockId = id;
-            document.getElementById('stockName').value = item.name;
-            document.getElementById('stockQty').value = item.quantity;
-            document.getElementById('stockPrice').value = item.price;
-            document.getElementById('stockThreshold').value = item.lowThreshold;
-            document.getElementById('stockEditId').innerText = `Editing: ${item.name}`;
+    async function saveStock() {
+        const name = document.getElementById('stockName').value.trim();
+        if (!name) return alert('Name required');
+        const qty = parseInt(document.getElementById('stockQty').value) || 0;
+        const price = parseFloat(document.getElementById('stockPrice').value) || 0;
+        const thresh = parseInt(document.getElementById('stockThreshold').value) || 5;
+        if (editingStockId) {
+            await updateDoc(doc(db, "stock", editingStockId), { name, quantity: qty, price, lowThreshold: thresh, updatedAt: new Date() });
+            editingStockId = null;
+        } else {
+            await addDoc(collection(db, "stock"), { name, quantity: qty, price, lowThreshold: thresh, createdAt: new Date() });
         }
+        clearStockForm();
+        showToast('Stock saved');
     }
-    document.getElementById('addStockBtn').onclick = async () => {
-        const name = document.getElementById('stockName').value.trim();
-        if (!name) { alert("Name required"); return; }
-        const qty = parseInt(document.getElementById('stockQty').value) || 0;
-        const price = parseFloat(document.getElementById('stockPrice').value) || 0;
-        const thresh = parseInt(document.getElementById('stockThreshold').value) || 5;
-        await addDoc(collection(db, "stock"), { name, quantity: qty, price, lowThreshold: thresh });
-        showToast("Stock added");
-        document.getElementById('stockName').value = ''; document.getElementById('stockQty').value = 0; document.getElementById('stockPrice').value = ''; document.getElementById('stockThreshold').value = 5;
-    };
-    document.getElementById('updateStockBtn').onclick = async () => {
-        if (!editingStockId) { alert("No stock selected for edit"); return; }
-        const name = document.getElementById('stockName').value.trim();
-        const qty = parseInt(document.getElementById('stockQty').value) || 0;
-        const price = parseFloat(document.getElementById('stockPrice').value) || 0;
-        const thresh = parseInt(document.getElementById('stockThreshold').value) || 5;
-        await updateDoc(doc(db, "stock", editingStockId), { name, quantity: qty, price, lowThreshold: thresh, updatedAt: new Date() });
-        showToast("Stock updated");
-        editingStockId = null; document.getElementById('stockEditId').innerText = '';
-        document.getElementById('stockName').value = ''; document.getElementById('stockQty').value = 0; document.getElementById('stockPrice').value = ''; document.getElementById('stockThreshold').value = 5;
-    };
-    document.getElementById('cancelStockEdit').onclick = () => { editingStockId = null; document.getElementById('stockEditId').innerText = ''; };
+    function clearStockForm() {
+        document.getElementById('stockName').value = '';
+        document.getElementById('stockQty').value = 0;
+        document.getElementById('stockPrice').value = '';
+        document.getElementById('stockThreshold').value = 5;
+        document.getElementById('stockEditId').innerText = '';
+        editingStockId = null;
+    }
+    document.getElementById('addStockBtn').onclick = saveStock;
+    document.getElementById('updateStockBtn').onclick = saveStock;
+    document.getElementById('cancelStockEdit').onclick = clearStockForm;
+    document.getElementById('stockSearch')?.addEventListener('input', e => renderStock(e.target.value));
     document.getElementById('exportStockCsvBtn').onclick = () => {
-        if (!stockItems.length) return;
-        const headers = ["Name","Quantity","Price (KES)","Low Threshold"];
-        const rows = stockItems.map(i => [i.name, i.quantity, i.price, i.lowThreshold]);
-        const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Stock_${Date.now()}.csv`; a.click(); showToast("CSV exported");
+        const csv = [["Name","Quantity","Price"], ...stockItems.map(i=>[i.name, i.quantity, i.price])].map(r=>r.join(",")).join("\n");
+        const blob = new Blob([csv], {type:"text/csv"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Stock_${Date.now()}.csv`; a.click(); showToast('Exported');
     };
 
-    // ========== EXPENSES ==========
-    let expenseYear = "all", expenseMonth = "all";
-    function loadExpensesWithFilters() { let filtered = [...expenses]; if (expenseYear !== "all") filtered = filtered.filter(e => e.date.startsWith(expenseYear)); if (expenseMonth !== "all") filtered = filtered.filter(e => new Date(e.date).getMonth() + 1 === parseInt(expenseMonth)); renderExpensesTable(filtered); updateExpenseFiltersUI(); }
-    function renderExpensesTable(data) { const tbody = document.getElementById('expensesTableBody'); if (!data.length) { tbody.innerHTML = '<tr><td colspan="5">No expenses</td></tr>'; return; } let html = ''; data.forEach(e => { html += `<tr><td>${e.date}</td><td>${escapeHtml(e.category)}</td><td>${formatKES(e.amount)}</td><td>${escapeHtml(e.description || '')}</td><td><button class="deleteExpenseBtn" data-id="${e.id}" style="background:#b91c1c;">🗑️</button></td></tr>`; }); tbody.innerHTML = html; document.querySelectorAll('.deleteExpenseBtn').forEach(btn => btn.addEventListener('click', async () => { if (confirm("Delete expense?")) await deleteDoc(doc(db, "expenses", btn.dataset.id)); })); }
-    function updateExpenseFiltersUI() { const years = [...new Set(expenses.map(e => e.date.split('-')[0]))].sort(); const ySel = document.getElementById('expenseYearFilter'); ySel.innerHTML = '<option value="all">All Years</option>'; years.forEach(y => ySel.innerHTML += `<option value="${y}">${y}</option>`); ySel.value = expenseYear; const mSel = document.getElementById('expenseMonthFilter'); mSel.innerHTML = '<option value="all">All Months</option>'; for (let i=1;i<=12;i++) mSel.innerHTML += `<option value="${i}">${i}</option>`; mSel.value = expenseMonth; }
-    document.getElementById('expenseYearFilter').onchange = e => { expenseYear = e.target.value; loadExpensesWithFilters(); };
-    document.getElementById('expenseMonthFilter').onchange = e => { expenseMonth = e.target.value; loadExpensesWithFilters(); };
-    document.getElementById('resetExpenseFilters').onclick = () => { expenseYear = "all"; expenseMonth = "all"; loadExpensesWithFilters(); };
-    document.getElementById('addExpenseBtn').onclick = async () => { const date = document.getElementById('expenseDate').value; if (!date) return; const category = document.getElementById('expenseCategory').value.trim(); const amount = parseFloat(document.getElementById('expenseAmount').value); const desc = document.getElementById('expenseDesc').value; if (!category || isNaN(amount)) return; await addDoc(collection(db, "expenses"), { date, category, amount, description: desc }); showToast("Expense added"); document.getElementById('expenseDate').valueAsDate = new Date(); document.getElementById('expenseCategory').value = ''; document.getElementById('expenseAmount').value = ''; document.getElementById('expenseDesc').value = ''; };
-    document.getElementById('exportExpensesCsv').onclick = () => { if (!expenses.length) return; const headers = ["Date","Category","Amount","Description"]; const rows = expenses.map(e => [e.date, e.category, e.amount, e.description]); const csv = [headers, ...rows].map(r => r.join(",")).join("\n"); const blob = new Blob([csv], { type: "text/csv" }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Expenses_${Date.now()}.csv`; a.click(); showToast("CSV exported"); };
+    // ---------- EXPENSES ----------
+    let expenseYear = 'all', expenseMonth = 'all';
+    function renderExpensesFiltered() {
+        let filtered = [...expenses];
+        if (expenseYear !== 'all') filtered = filtered.filter(e => e.date.startsWith(expenseYear));
+        if (expenseMonth !== 'all') filtered = filtered.filter(e => new Date(e.date).getMonth() + 1 === parseInt(expenseMonth));
+        const tbody = document.getElementById('expensesTableBody');
+        if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="5">No expenses</td></tr>'; return; }
+        let html = '';
+        filtered.forEach(e => {
+            html += `<tr>
+                        <td>${e.date}</td>
+                        <td>${escapeHtml(e.category)}</td>
+                        <td>${formatKES(e.amount)}</td>
+                        <td>${escapeHtml(e.description || '')}</td>
+                        <td><button class="deleteExpenseBtn" data-id="${e.id}" class="btn-danger">🗑️</button></td>
+                    </tr>`;
+        });
+        tbody.innerHTML = html;
+        document.querySelectorAll('.deleteExpenseBtn').forEach(btn => btn.addEventListener('click', async () => {
+            if (confirm('Delete expense?')) await deleteDoc(doc(db, "expenses", btn.dataset.id));
+        }));
+    }
+    function updateExpenseFiltersUI() {
+        const years = [...new Set(expenses.map(e => e.date.split('-')[0]))].sort();
+        const ySel = document.getElementById('expenseYearFilter');
+        ySel.innerHTML = '<option value="all">All Years</option>';
+        years.forEach(y => ySel.innerHTML += `<option value="${y}">${y}</option>`);
+        ySel.value = expenseYear;
+        const mSel = document.getElementById('expenseMonthFilter');
+        mSel.innerHTML = '<option value="all">All Months</option>';
+        for (let i = 1; i <= 12; i++) mSel.innerHTML += `<option value="${i}">${i}</option>`;
+        mSel.value = expenseMonth;
+    }
+    document.getElementById('expenseYearFilter').onchange = e => { expenseYear = e.target.value; renderExpensesFiltered(); };
+    document.getElementById('expenseMonthFilter').onchange = e => { expenseMonth = e.target.value; renderExpensesFiltered(); };
+    document.getElementById('resetExpenseFilters').onclick = () => { expenseYear = 'all'; expenseMonth = 'all'; renderExpensesFiltered(); updateExpenseFiltersUI(); };
+    document.getElementById('addExpenseBtn').onclick = async () => {
+        const date = document.getElementById('expenseDate').value;
+        const cat = document.getElementById('expenseCategory').value.trim();
+        const amt = parseFloat(document.getElementById('expenseAmount').value);
+        const desc = document.getElementById('expenseDesc').value;
+        if (!date || !cat || isNaN(amt)) return alert('Fill all fields');
+        await addDoc(collection(db, "expenses"), { date, category: cat, amount: amt, description: desc });
+        document.getElementById('expenseCategory').value = '';
+        document.getElementById('expenseAmount').value = '';
+        document.getElementById('expenseDesc').value = '';
+        showToast('Expense added');
+    };
+    document.getElementById('exportExpensesCsv').onclick = () => {
+        const csv = [["Date","Category","Amount","Description"], ...expenses.map(e=>[e.date, e.category, e.amount, e.description])].map(r=>r.join(",")).join("\n");
+        const blob = new Blob([csv]); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Expenses_${Date.now()}.csv`; a.click();
+    };
 
-    // ========== POS ==========
+    // ---------- POS (Firestore products in dropdown) ----------
     function refreshProductSelect() {
         const select = document.getElementById('posProductSelect');
-        select.innerHTML = '<option value="">-- Select --</option>';
+        select.innerHTML = '<option value="">-- Select product/service --</option>';
         products.forEach(p => {
-            const selling = p.sellingPrice || 0;
-            select.innerHTML += `<option value="${p.id}" data-selling="${selling}" data-buying="${p.buyingPrice||0}" data-type="${p.type}" data-name="${p.name}">${escapeHtml(p.name)} (${p.type}) - ${formatKES(selling)}</option>`;
+            select.innerHTML += `<option value="${p.id}" data-selling="${p.sellingPrice}" data-name="${p.name}">${escapeHtml(p.name)} (${p.type}) - ${formatKES(p.sellingPrice)}</option>`;
         });
     }
     document.getElementById('posProductSelect').addEventListener('change', (e) => {
@@ -352,28 +543,34 @@ const firebaseConfig = {
         if (opt && opt.value) {
             document.getElementById('posPrice').value = parseFloat(opt.dataset.selling);
             document.getElementById('posCustomName').value = opt.dataset.name;
-        } else document.getElementById('posPrice').value = '';
+        } else {
+            document.getElementById('posPrice').value = '';
+        }
     });
     function addToCart() {
         let name = document.getElementById('posCustomName').value.trim();
-        let sellingPrice = parseFloat(document.getElementById('posPrice').value);
-        let buyingPrice = 0, type = 'Product', productId = null;
-        const select = document.getElementById('posProductSelect');
-        if (select.value) {
-            const selected = products.find(p => p.id === select.value);
-            if (selected) { name = selected.name; sellingPrice = selected.sellingPrice; buyingPrice = selected.buyingPrice || 0; type = selected.type; productId = selected.id; }
+        let price = parseFloat(document.getElementById('posPrice').value);
+        let productId = null;
+        const selectedId = document.getElementById('posProductSelect').value;
+        if (selectedId) {
+            const prod = products.find(p => p.id === selectedId);
+            if (prod) {
+                name = prod.name;
+                price = prod.sellingPrice;
+                productId = prod.id;
+            }
         }
-        if (!name) { alert("Enter item name"); return; }
-        if (isNaN(sellingPrice) || sellingPrice <= 0) { alert("Valid selling price required"); return; }
+        if (!name || isNaN(price) || price <= 0) return alert('Valid item & price');
         const qty = parseInt(document.getElementById('posQty').value);
-        if (isNaN(qty) || qty < 1) return;
-        if (type === "Product" && productId) {
-            const stockItem = stockItems.find(s => s.name.toLowerCase() === name.toLowerCase());
-            if (stockItem && stockItem.quantity < qty) { alert(`Insufficient stock: only ${stockItem.quantity} left`); return; }
-        }
-        cart.push({ name, qty, sellingPrice, buyingPrice, productId, type, total: qty * sellingPrice });
+        if (qty < 1) return;
+        const stockItem = stockItems.find(s => s.name.toLowerCase() === name.toLowerCase());
+        if (stockItem && stockItem.quantity < qty) return alert(`Only ${stockItem.quantity} left in stock`);
+        cart.push({ name, qty, sellingPrice: price, buyingPrice: stockItem?.price || 0, productId, type: stockItem ? 'Product' : 'Service', total: qty * price });
         renderCart();
-        document.getElementById('posQty').value = 1; document.getElementById('posCustomName').value = ''; document.getElementById('posPrice').value = ''; document.getElementById('posProductSelect').value = '';
+        document.getElementById('posQty').value = 1;
+        document.getElementById('posCustomName').value = '';
+        document.getElementById('posPrice').value = '';
+        document.getElementById('posProductSelect').value = '';
     }
     function renderCart() {
         const container = document.getElementById('cartItemsList');
@@ -381,134 +578,194 @@ const firebaseConfig = {
         let html = '', total = 0;
         cart.forEach((item, idx) => {
             total += item.total;
-            html += `<div class="cart-item"><span>${escapeHtml(item.name)}</span><span>${item.qty} x ${formatKES(item.sellingPrice)}</span><span>${formatKES(item.total)}</span><button class="removeCartItem" data-idx="${idx}" style="background:#b91c1c;">🗑️</button></div>`;
+            html += `<div class="cart-item"><span>${escapeHtml(item.name)}</span><span>${item.qty} x ${formatKES(item.sellingPrice)}</span><span>${formatKES(item.total)}</span><button class="removeCartItem" data-idx="${idx}" style="background:#dc2626;">✖️</button></div>`;
         });
         container.innerHTML = html;
         document.getElementById('cartTotal').innerHTML = `Total: ${formatKES(total)}`;
-        document.querySelectorAll('.removeCartItem').forEach(btn => btn.addEventListener('click', () => { const idx = parseInt(btn.dataset.idx); cart.splice(idx, 1); renderCart(); }));
+        document.querySelectorAll('.removeCartItem').forEach(btn => btn.addEventListener('click', () => { cart.splice(parseInt(btn.dataset.idx), 1); renderCart(); }));
     }
     document.getElementById('addToCartBtn').onclick = addToCart;
     document.getElementById('clearCartBtn').onclick = () => { cart = []; renderCart(); };
     async function completeSale() {
-        if (cart.length === 0) { alert("Cart empty"); return; }
+        if (cart.length === 0) return alert('Cart empty');
         const client = document.getElementById('clientNumber').value.trim();
-        if (!client) { alert("Client number required"); return; }
+        if (!client) return alert('Client required');
         const payment = document.getElementById('paymentMethod').value;
         const total = cart.reduce((s, i) => s + i.total, 0);
         const receiptNo = `NB-${Date.now()}`;
-        const batch = writeBatch(db);
+        // Validate stock before batch
         for (const item of cart) {
-            if (item.type === "Product") {
-                const stockItem = stockItems.find(s => s.name.toLowerCase() === item.name.toLowerCase());
-                if (stockItem) {
-                    const newQty = stockItem.quantity - item.qty;
-                    if (newQty < 0) { alert(`Stock insufficient for ${item.name}`); return; }
-                    batch.update(doc(db, "stock", stockItem.id), { quantity: newQty });
-                }
+            const stockItem = stockItems.find(s => s.name.toLowerCase() === item.name.toLowerCase());
+            if (stockItem && stockItem.quantity < item.qty) return alert(`Insufficient stock: ${item.name}`);
+        }
+        const batch = writeBatch(db);
+        // Update stock quantities
+        for (const item of cart) {
+            const stockItem = stockItems.find(s => s.name.toLowerCase() === item.name.toLowerCase());
+            if (stockItem) {
+                const newQty = stockItem.quantity - item.qty;
+                batch.update(doc(db, "stock", stockItem.id), { quantity: newQty });
             }
         }
+        // Add transaction
         const transRef = doc(collection(db, "transactions"));
-        batch.set(transRef, { receiptNo, clientNumber: client, paymentMethod: payment, items: cart.map(i => ({ name: i.name, qty: i.qty, sellingPrice: i.sellingPrice, buyingPrice: i.buyingPrice, type: i.type, total: i.total })), total, date: new Date().toISOString(), userId: auth.currentUser?.uid });
+        batch.set(transRef, {
+            receiptNo, clientNumber: client, paymentMethod: payment,
+            items: cart.map(i => ({ name: i.name, qty: i.qty, sellingPrice: i.sellingPrice, buyingPrice: i.buyingPrice, type: i.type, total: i.total })),
+            total, date: new Date().toISOString(), userId: auth.currentUser?.uid
+        });
         await batch.commit();
         printReceipt({ receiptNo, clientNumber: client, paymentMethod: payment, items: cart, total, date: new Date() });
-        showToast("Sale completed & stock updated");
-        cart = []; renderCart(); document.getElementById('clientNumber').value = '';
-        setTimeout(() => { onSnapshot(collection(db, "stock"), snap => { stockItems = []; snap.forEach(d => stockItems.push({ id: d.id, ...d.data() })); renderStock(); refreshProductSelect(); }); }, 500);
-        loadRecentTransactions();
-        updateDashboard();
+        cart = [];
+        renderCart();
+        document.getElementById('clientNumber').value = '';
+        showToast('Sale completed & stock updated');
     }
     function printReceipt(sale) {
         const win = window.open('', '_blank');
         let itemsHtml = '';
-        sale.items.forEach(item => { itemsHtml += `<tr><td>${escapeHtml(item.name)}</td><td>${item.qty}</td><td>${formatKES(item.sellingPrice)}</td><td>${formatKES(item.total)}</td></tr>`; });
-        win.document.write(`<!DOCTYPE html><html><head><title>Receipt ${sale.receiptNo}</title><style>body{font-family:Inter;padding:1rem;}.receipt{max-width:400px;margin:auto;background:white;border-radius:1rem;padding:1rem;}</style></head><body><div class="receipt"><h2>Nabore Bookshop</h2><hr><p>#${sale.receiptNo}</p><p>${new Date(sale.date).toLocaleString()}</p><p>Client: ${escapeHtml(sale.clientNumber)}</p><p>Payment: ${sale.paymentMethod}</p><table width="100%"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><hr><h3>Total: ${formatKES(sale.total)}</h3><p>Thank you!</p></div></body></html>`);
-        win.document.close(); win.print();
+        sale.items.forEach(i => { itemsHtml += `<tr><td>${escapeHtml(i.name)}</td><td>${i.qty}</td><td>${formatKES(i.sellingPrice)}</td><td>${formatKES(i.total)}</td></tr>`; });
+        win.document.write(`<!DOCTYPE html><html><head><title>Receipt ${sale.receiptNo}</title><style>body{font-family:Inter;padding:1rem;}</style></head><body><div><h2>Nabore Bookshop</h2><hr><p>#${sale.receiptNo}</p><p>${new Date(sale.date).toLocaleString()}</p><p>Client: ${escapeHtml(sale.clientNumber)}</p><p>Payment: ${sale.paymentMethod}</p><table border="1" cellpadding="4">${itemsHtml}</table><h3>Total: ${formatKES(sale.total)}</h3><p>Thank you!</p></div></body></html>`);
+        win.document.close();
+        win.print();
     }
     document.getElementById('completeSaleBtn').onclick = completeSale;
-
-    // ========== TRANSACTIONS ==========
-    async function loadRecentTransactions() {
-        const q = query(collection(db, "transactions"), orderBy("date", "desc"));
-        const snap = await getDocs(q);
+    function loadRecentTransactions() {
         const tbody = document.getElementById('transactionsBody');
-        if (snap.empty) { tbody.innerHTML = '<tr><td colspan="6">No transactions</td></tr>'; return; }
+        if (!transactions.length) { tbody.innerHTML = '<tr><td colspan="6">No transactions</td></tr>'; return; }
         let html = '';
-        snap.forEach(doc => { const t = doc.data(); html += `<tr><td>${new Date(t.date).toLocaleString()}</td><td>${escapeHtml(t.clientNumber)}</td><td>${t.paymentMethod}</td><td>${t.items.length} items</td><td>${formatKES(t.total)}</td><td><button class="reprintBtn" data-receipt='${JSON.stringify(t)}'>🖨️</button></td></tr>`; });
+        transactions.slice(0, 20).forEach(t => {
+            html += `<tr>
+                        <td>${new Date(t.date).toLocaleString()}</td>
+                        <td>${escapeHtml(t.clientNumber)}</td>
+                        <td>${t.paymentMethod}</td>
+                        <td>${t.items.length} items</td>
+                        <td>${formatKES(t.total)}</td>
+                        <td><button class="reprintBtn" data-receipt='${JSON.stringify(t)}'>🖨️</button></td>
+                    </tr>`;
+        });
         tbody.innerHTML = html;
-        document.querySelectorAll('.reprintBtn').forEach(btn => btn.addEventListener('click', () => { const data = JSON.parse(btn.dataset.receipt); printReceipt({ receiptNo: data.receiptNo, clientNumber: data.clientNumber, paymentMethod: data.paymentMethod, items: data.items.map(i => ({ ...i, sellingPrice: i.sellingPrice })), total: data.total, date: data.date }); }));
+        document.querySelectorAll('.reprintBtn').forEach(btn => btn.addEventListener('click', () => {
+            const data = JSON.parse(btn.dataset.receipt);
+            printReceipt({ receiptNo: data.receiptNo, clientNumber: data.clientNumber, paymentMethod: data.paymentMethod, items: data.items, total: data.total, date: data.date });
+        }));
     }
-    async function exportTransactionsToCSV() {
-        const q = query(collection(db, "transactions"), orderBy("date", "desc"));
-        const snap = await getDocs(q);
-        if (snap.empty) { alert("No transactions"); return; }
-        const headers = ["Receipt No","Date","Client","Payment","Items","Total (KES)"];
-        const rows = [];
-        snap.forEach(doc => { const t = doc.data(); const itemsSummary = t.items.map(i => `${i.name} x${i.qty}`).join("; "); rows.push([t.receiptNo, new Date(t.date).toLocaleString(), t.clientNumber, t.paymentMethod, itemsSummary, t.total.toFixed(2)]); });
-        const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Transactions_${Date.now()}.csv`; a.click(); showToast("CSV exported");
-    }
+    document.getElementById('exportTransactionsCsv').onclick = () => {
+        const csv = [["Receipt","Date","Client","Total"], ...transactions.map(t=>[t.receiptNo, t.date, t.clientNumber, t.total])].map(r=>r.join(",")).join("\n");
+        const blob = new Blob([csv]); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Transactions_${Date.now()}.csv`; a.click();
+    };
 
-    // ========== DASHBOARD ==========
+    // ---------- DASHBOARD & AI ----------
     async function updateDashboard() {
-        const stockValue = stockItems.reduce((sum, i) => sum + (i.quantity * i.price), 0);
-        document.getElementById('totalStockValue').innerHTML = formatKES(stockValue);
-        let totalRevenue = 0, totalProfit = 0;
-        transactions.forEach(t => { t.items.forEach(item => { const revenue = item.total; totalRevenue += revenue; const cost = (item.type === "Product" ? (item.buyingPrice || 0) * item.qty : 0); totalProfit += revenue - cost; }); });
-        const totalExp = expenses.reduce((sum, e) => sum + e.amount, 0);
-        const netProfit = totalProfit - totalExp;
-        document.getElementById('totalSalesRevenue').innerHTML = formatKES(totalRevenue);
+        const stockVal = stockItems.reduce((s,i) => s + (i.quantity * i.price), 0);
+        document.getElementById('totalStockValue').innerHTML = formatKES(stockVal);
+        let revenue = 0, cost = 0;
+        transactions.forEach(t => {
+            t.items.forEach(it => {
+                revenue += it.total;
+                if (it.type === 'Product') cost += (it.buyingPrice || 0) * it.qty;
+            });
+        });
+        const totalExp = expenses.reduce((s,e) => s + e.amount, 0);
+        const net = revenue - cost - totalExp;
+        document.getElementById('totalSalesRevenue').innerHTML = formatKES(revenue);
         document.getElementById('totalExpensesDashboard').innerHTML = formatKES(totalExp);
-        document.getElementById('netProfitDashboard').innerHTML = formatKES(netProfit);
-        const last7 = [...Array(7)].map((_, i) => { let d = new Date(); d.setDate(d.getDate() - i); return d.toISOString().slice(0, 10); }).reverse();
+        document.getElementById('netProfitDashboard').innerHTML = formatKES(net);
+        const last7 = [...Array(7)].map((_,i) => { let d = new Date(); d.setDate(d.getDate() - i); return d.toISOString().slice(0,10); }).reverse();
         const salesByDay = {}, expByDay = {};
         transactions.forEach(t => { const day = t.date.slice(0,10); salesByDay[day] = (salesByDay[day] || 0) + t.total; });
         expenses.forEach(e => { expByDay[e.date] = (expByDay[e.date] || 0) + e.amount; });
-        const salesData = last7.map(d => salesByDay[d] || 0);
-        const expData = last7.map(d => expByDay[d] || 0);
+        const salesData = last7.map(d => salesByDay[d] || 0), expData = last7.map(d => expByDay[d] || 0);
         if (trendChart) trendChart.destroy();
         trendChart = new Chart(document.getElementById('trendChart'), { type: 'line', data: { labels: last7, datasets: [{ label: 'Sales', data: salesData, borderColor: '#4169E1' }, { label: 'Expenses', data: expData, borderColor: '#e67e22' }] } });
-        const stockNames = stockItems.map(s => s.name);
-        const stockValues = stockItems.map(s => s.quantity * s.price);
+        const pieNames = stockItems.map(s => s.name), pieVals = stockItems.map(s => s.quantity * s.price);
         if (pieChart) pieChart.destroy();
-        pieChart = new Chart(document.getElementById('stockPieChart'), { type: 'pie', data: { labels: stockNames, datasets: [{ data: stockValues, backgroundColor: '#4169E1' }] } });
-        const productSales = {};
-        transactions.forEach(t => { t.items.forEach(item => { if (item.type === "Product") { productSales[item.name] = (productSales[item.name] || 0) + item.qty; } }); });
-        const sorted = Object.entries(productSales).sort((a,b) => b[1] - a[1]).slice(0,5);
-        const topDiv = document.getElementById('topSellingList');
-        if (!sorted.length) topDiv.innerHTML = '<p>No product sales yet</p>';
-        else topDiv.innerHTML = '<ul>' + sorted.map(([n,q]) => `<li>${escapeHtml(n)}: ${q} sold</li>`).join('') + '</ul>';
-        const lowItems = stockItems.filter(i => i.quantity <= i.lowThreshold);
-        const reorderDiv = document.getElementById('reorderSuggestions');
-        if (!lowItems.length) reorderDiv.innerHTML = '<p>All stock levels are healthy</p>';
-        else reorderDiv.innerHTML = '<ul>' + lowItems.map(i => `<li>${escapeHtml(i.name)}: ${i.quantity} left (reorder ${i.lowThreshold * 2})</li>`).join('') + '</ul>';
+        pieChart = new Chart(document.getElementById('stockPieChart'), { type: 'pie', data: { labels: pieNames, datasets: [{ data: pieVals, backgroundColor: '#4169E1' }] } });
+        const prodSales = {};
+        transactions.forEach(t => { t.items.forEach(it => { if (it.type === 'Product') prodSales[it.name] = (prodSales[it.name] || 0) + it.qty; }); });
+        const top = Object.entries(prodSales).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        document.getElementById('topSellingList').innerHTML = top.length ? `<ul>${top.map(([n,q])=>`<li>${n}: ${q} sold</li>`).join('')}</ul>` : '<p>No sales yet</p>';
+        const low = stockItems.filter(i => i.quantity <= i.lowThreshold);
+        document.getElementById('reorderSuggestions').innerHTML = low.length ? `<ul>${low.map(i=>`<li>${i.name}: ${i.quantity} left → reorder ${i.lowThreshold*2}</li>`).join('')}</ul>` : '<p>✅ Stock healthy</p>';
     }
-    function updateManagementFeatures() { updateDashboard(); }
+    document.getElementById('saveApiKeyBtn').onclick = () => { const key = document.getElementById('geminiApiKey').value.trim(); if(key) { localStorage.setItem('geminiApiKey', key); geminiApiKey = key; showToast('API key saved'); } };
+    async function getAiInsights() {
+        if (!geminiApiKey) { document.getElementById('aiResponse').innerHTML = '⚠️ Save your Gemini API key first.'; return; }
+        document.getElementById('aiResponse').innerHTML = '🤖 Generating insights...';
+        try {
+            const genAI = new GoogleGenerativeAI(geminiApiKey);
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            const recentRev = transactions.slice(0,7).reduce((s,t)=>s+t.total,0);
+            const lowItems = stockItems.filter(i=>i.quantity<=i.lowThreshold).map(i=>i.name).join(', ');
+            const prompt = `Nabore Bookshop: last 7d revenue KES ${recentRev}. Low stock: ${lowItems||'none'}. Expenses: ${expenses.slice(0,3).map(e=>e.category+': '+e.amount).join(', ')}. Give 3 short actionable retail tips.`;
+            const result = await model.generateContent(prompt);
+            const text = await result.response.text();
+            document.getElementById('aiResponse').innerHTML = `✨ ${text.replace(/\n/g,'<br>')}`;
+        } catch(e) { document.getElementById('aiResponse').innerHTML = `❌ Error: ${e.message}`; }
+    }
+    document.getElementById('getAiInsightsBtn').onclick = getAiInsights;
 
-    // ========== SALES HISTORY CRUD ==========
+    // ---------- SALES HISTORY ----------
+    function renderSalesHistory() {
+        const tbody = document.getElementById('salesHistoryBody');
+        if (!salesHistory.length) { tbody.innerHTML = '<tr><td colspan="7">No records</td></tr>'; return; }
+        let totalSer = 0, totalProd = 0, totalExp = 0;
+        let html = '';
+        salesHistory.forEach(rec => {
+            const s = rec.services || 0, p = rec.product || 0, e = rec.expenses || 0;
+            totalSer += s; totalProd += p; totalExp += e;
+            const net = s + p - e;
+            html += `<tr>
+                        <td>${rec.date}</td>
+                        <td>${formatKES(s)}</td>
+                        <td>${formatKES(p)}</td>
+                        <td>${formatKES(e)}</td>
+                        <td>${formatKES(net)}</td>
+                        <td>${rec.image ? `<img src="${rec.image}" style="width:40px; border-radius:8px;">` : '—'}</td>
+                        <td><button class="editSalesBtn" data-date="${rec.date}">✏️</button> <button class="delSalesBtn" data-date="${rec.date}" class="btn-danger">🗑️</button></td>
+                    </tr>`;
+        });
+        tbody.innerHTML = html;
+        document.getElementById('salesHistoryTotalServices').innerHTML = formatKES(totalSer);
+        document.getElementById('salesHistoryTotalProduct').innerHTML = formatKES(totalProd);
+        document.getElementById('salesHistoryTotalExpenses').innerHTML = formatKES(totalExp);
+        document.getElementById('salesHistoryNetProfit').innerHTML = formatKES(totalSer + totalProd - totalExp);
+        document.querySelectorAll('.editSalesBtn').forEach(btn => btn.addEventListener('click', () => {
+            const rec = salesHistory.find(r => r.date === btn.dataset.date);
+            if (rec) {
+                document.getElementById('salesHistoryDate').value = rec.date;
+                document.getElementById('salesHistoryServices').value = rec.services || 0;
+                document.getElementById('salesHistoryProduct').value = rec.product || 0;
+                document.getElementById('salesHistoryExpenses').value = rec.expenses || 0;
+                if (rec.image) { salesHistoryImageDataUrl = rec.image; document.getElementById('salesHistoryPreviewArea').innerHTML = `<img src="${rec.image}" style="width:60px;">`; }
+                document.getElementById('salesHistoryEditStatus').innerText = `Editing ${rec.date}`;
+            }
+        }));
+        document.querySelectorAll('.delSalesBtn').forEach(btn => btn.addEventListener('click', async () => {
+            if (confirm('Delete record?')) {
+                await deleteDoc(doc(db, "salesHistory", btn.dataset.date));
+                showToast('Deleted');
+            }
+        }));
+    }
     document.getElementById('salesHistoryImage').addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
+        if (e.target.files[0]) {
             const reader = new FileReader();
-            reader.onload = (ev) => {
-                salesHistoryImageDataUrl = ev.target.result;
-                document.getElementById('salesHistoryPreviewArea').innerHTML = `<img src="${salesHistoryImageDataUrl}" style="width:60px;"><button id="clearSalesHistoryImage" class="btn-outline">Remove</button>`;
-                document.getElementById('clearSalesHistoryImage')?.addEventListener('click', () => { salesHistoryImageDataUrl = null; document.getElementById('salesHistoryPreviewArea').innerHTML = ''; document.getElementById('salesHistoryImage').value = ''; });
-            };
+            reader.onload = ev => { salesHistoryImageDataUrl = ev.target.result; document.getElementById('salesHistoryPreviewArea').innerHTML = `<img src="${salesHistoryImageDataUrl}" style="width:60px;"><button id="clearImgBtn" class="btn-outline">Remove</button>`; document.getElementById('clearImgBtn')?.addEventListener('click', () => { salesHistoryImageDataUrl = null; document.getElementById('salesHistoryPreviewArea').innerHTML = ''; document.getElementById('salesHistoryImage').value = ''; }); };
             reader.readAsDataURL(e.target.files[0]);
-        } else { salesHistoryImageDataUrl = null; document.getElementById('salesHistoryPreviewArea').innerHTML = ''; }
+        }
     });
-    async function saveSalesHistoryRecord() {
+    async function saveSalesRecord() {
         const date = document.getElementById('salesHistoryDate').value;
-        if (!date) { alert("Select date"); return; }
+        if (!date) return alert('Select date');
         const services = parseFloat(document.getElementById('salesHistoryServices').value) || 0;
         const product = parseFloat(document.getElementById('salesHistoryProduct').value) || 0;
-        const expenses = parseFloat(document.getElementById('salesHistoryExpenses').value) || 0;
-        const exists = await getDoc(doc(db, "sales", date)).then(s => s.exists());
-        if (exists && !confirm(`Record for ${date} already exists. Overwrite?`)) return;
-        await setDoc(doc(db, "sales", date), { date, services, product, expenses, image: salesHistoryImageDataUrl || null, updatedAt: new Date().toISOString() });
-        showToast("Saved");
-        clearSalesHistoryForm();
+        const exp = parseFloat(document.getElementById('salesHistoryExpenses').value) || 0;
+        await setDoc(doc(db, "salesHistory", date), { date, services, product, expenses: exp, image: salesHistoryImageDataUrl || null, updatedAt: new Date() });
+        clearSalesForm();
+        showToast('Saved');
     }
-    function clearSalesHistoryForm() {
+    function clearSalesForm() {
         document.getElementById('salesHistoryDate').value = '';
         document.getElementById('salesHistoryServices').value = 0;
         document.getElementById('salesHistoryProduct').value = 0;
@@ -516,81 +773,16 @@ const firebaseConfig = {
         salesHistoryImageDataUrl = null;
         document.getElementById('salesHistoryPreviewArea').innerHTML = '';
         document.getElementById('salesHistoryImage').value = '';
-        editingSalesDate = null;
         document.getElementById('salesHistoryEditStatus').innerText = '';
     }
-    async function editSalesRecord(date) {
-        const snap = await getDoc(doc(db, "sales", date));
-        if (snap.exists()) {
-            const data = snap.data();
-            document.getElementById('salesHistoryDate').value = date;
-            document.getElementById('salesHistoryServices').value = data.services || 0;
-            document.getElementById('salesHistoryProduct').value = data.product || 0;
-            document.getElementById('salesHistoryExpenses').value = data.expenses || 0;
-            if (data.image) {
-                salesHistoryImageDataUrl = data.image;
-                document.getElementById('salesHistoryPreviewArea').innerHTML = `<img src="${data.image}" style="width:60px;"><button id="clearEditImage" class="btn-outline">Remove</button>`;
-                document.getElementById('clearEditImage')?.addEventListener('click', () => { salesHistoryImageDataUrl = null; document.getElementById('salesHistoryPreviewArea').innerHTML = ''; document.getElementById('salesHistoryImage').value = ''; });
-            } else { salesHistoryImageDataUrl = null; document.getElementById('salesHistoryPreviewArea').innerHTML = ''; }
-            editingSalesDate = date;
-            document.getElementById('salesHistoryEditStatus').innerText = `Editing: ${date}`;
-        } else alert("Record not found");
-    }
-    async function deleteSalesRecord(date) {
-        if (confirm(`Delete ${date}?`)) { await deleteDoc(doc(db, "sales", date)); showToast("Deleted"); }
-    }
-    function renderSalesHistory() {
-        const tbody = document.getElementById('salesHistoryBody');
-        if (!salesHistory.length) { tbody.innerHTML = '<tr><td colspan="7">No records</td></tr>'; resetSalesHistoryStats(); return; }
-        let totalServices = 0, totalProduct = 0, totalExpenses = 0;
-        let html = '';
-        salesHistory.forEach(rec => {
-            const s = rec.services || 0, p = rec.product || 0, e = rec.expenses || 0;
-            totalServices += s; totalProduct += p; totalExpenses += e;
-            const net = s + p - e;
-            const imgHtml = rec.image ? `<img src="${rec.image}" class="table-img" onclick="window.open('${rec.image}','_blank')">` : '—';
-            html += `<tr><td>${rec.date}</td><td>${formatKES(s)}</td><td>${formatKES(p)}</td><td>${formatKES(e)}</td><td>${formatKES(net)}</td><td>${imgHtml}</td><td><button class="editSalesHistoryBtn" data-date="${rec.date}">✏️</button> <button class="deleteSalesHistoryBtn" data-date="${rec.date}" style="background:#b91c1c;">🗑️</button></td></tr>`;
-        });
-        tbody.innerHTML = html;
-        document.getElementById('salesHistoryTotalServices').innerHTML = formatKES(totalServices);
-        document.getElementById('salesHistoryTotalProduct').innerHTML = formatKES(totalProduct);
-        document.getElementById('salesHistoryTotalExpenses').innerHTML = formatKES(totalExpenses);
-        document.getElementById('salesHistoryNetProfit').innerHTML = formatKES(totalServices + totalProduct - totalExpenses);
-        document.querySelectorAll('.editSalesHistoryBtn').forEach(btn => btn.addEventListener('click', () => editSalesRecord(btn.dataset.date)));
-        document.querySelectorAll('.deleteSalesHistoryBtn').forEach(btn => btn.addEventListener('click', () => deleteSalesRecord(btn.dataset.date)));
-    }
-    function resetSalesHistoryStats() {
-        document.getElementById('salesHistoryTotalServices').innerHTML = 'KES 0.00';
-        document.getElementById('salesHistoryTotalProduct').innerHTML = 'KES 0.00';
-        document.getElementById('salesHistoryTotalExpenses').innerHTML = 'KES 0.00';
-        document.getElementById('salesHistoryNetProfit').innerHTML = 'KES 0.00';
-    }
-    function exportSalesHistoryToCSV() {
-        if (!salesHistory.length) { alert("No data"); return; }
-        const headers = ["Date","Services","Product","Expenses","Net","Has Image"];
-        const rows = salesHistory.map(rec => [rec.date, (rec.services||0).toFixed(2), (rec.product||0).toFixed(2), (rec.expenses||0).toFixed(2), ((rec.services||0)+(rec.product||0)-(rec.expenses||0)).toFixed(2), rec.image ? "Yes" : "No"]);
-        const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `SalesHistory_${Date.now()}.csv`; a.click(); showToast("CSV exported");
-    }
-
-    // ========== AI ==========
-    function maybeLoadApiKey() { const input = document.getElementById('geminiApiKey'); if (input && geminiApiKey) input.value = geminiApiKey; }
-    document.getElementById('saveApiKeyBtn').onclick = () => { const key = document.getElementById('geminiApiKey').value.trim(); if (key) { localStorage.setItem('geminiApiKey', key); geminiApiKey = key; showToast("Key saved"); } };
-    document.getElementById('getAiInsightsBtn').onclick = async () => {
-        const key = localStorage.getItem('geminiApiKey');
-        if (!key) { alert("Save your Gemini API key first"); return; }
-        document.getElementById('aiResponse').innerHTML = "🤔 Generating insights...";
-        try {
-            const genAI = new GoogleGenerativeAI(key);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            const prompt = `Business analysis for Nabore Bookshop. Data: last 7 days revenue = KES ${transactions.slice(0,7).reduce((s,t)=>s+t.total,0).toFixed(2)}, low stock items: ${stockItems.filter(i=>i.quantity<=i.lowThreshold).map(i=>i.name).join(", ")}, recent expenses: ${expenses.slice(0,5).map(e=>e.category+" "+e.amount).join(", ")}. Give short actionable insights.`;
-            const result = await model.generateContent(prompt);
-            const text = await result.response.text();
-            document.getElementById('aiResponse').innerHTML = `✨ ${text.replace(/\n/g, '<br>')}`;
-        } catch (err) { document.getElementById('aiResponse').innerHTML = `❌ AI error: ${err.message}`; }
+    document.getElementById('saveSalesHistoryBtn').onclick = saveSalesRecord;
+    document.getElementById('resetSalesHistoryFormBtn').onclick = clearSalesForm;
+    document.getElementById('exportSalesHistoryCsv').onclick = () => {
+        const csv = [["Date","Services","Product","Expenses","Net"], ...salesHistory.map(r=>[r.date, r.services||0, r.product||0, r.expenses||0, (r.services||0)+(r.product||0)-(r.expenses||0)])].map(row=>row.join(",")).join("\n");
+        const blob = new Blob([csv]); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `SalesHistory_${Date.now()}.csv`; a.click();
     };
 
-    // ========== TAB SWITCHING ==========
+    // ---------- TAB SWITCHING ----------
     const tabs = document.querySelectorAll('.tab-btn');
     const panes = { pos: document.getElementById('posTab'), products: document.getElementById('productsTab'), stock: document.getElementById('stockTab'), expenses: document.getElementById('expensesTab'), dashboard: document.getElementById('dashboardTab'), saleshistory: document.getElementById('saleshistoryTab') };
     tabs.forEach(btn => {
@@ -599,28 +791,14 @@ const firebaseConfig = {
             btn.classList.add('active');
             Object.values(panes).forEach(p => p.classList.remove('active'));
             panes[btn.dataset.tab].classList.add('active');
-            if (btn.dataset.tab === 'dashboard') { updateDashboard(); maybeLoadApiKey(); }
+            if (btn.dataset.tab === 'dashboard') updateDashboard();
             if (btn.dataset.tab === 'pos') refreshProductSelect();
-            if (btn.dataset.tab === 'expenses') loadExpensesWithFilters();
+            if (btn.dataset.tab === 'expenses') { renderExpensesFiltered(); updateExpenseFiltersUI(); }
             if (btn.dataset.tab === 'saleshistory') renderSalesHistory();
+            if (btn.dataset.tab === 'products') renderProducts();
+            if (btn.dataset.tab === 'stock') renderStock();
         });
     });
-
-    // ========== INIT ==========
-    function initApp() {
-        onSnapshot(collection(db, "products"), snap => { products = []; snap.forEach(d => products.push({ id: d.id, ...d.data() })); renderProducts(); refreshProductSelect(); });
-        onSnapshot(collection(db, "stock"), snap => { stockItems = []; snap.forEach(d => stockItems.push({ id: d.id, ...d.data() })); renderStock(); if (panes.dashboard.classList.contains('active')) updateDashboard(); });
-        onSnapshot(collection(db, "expenses"), snap => { expenses = []; snap.forEach(d => expenses.push({ id: d.id, ...d.data() })); loadExpensesWithFilters(); if (panes.dashboard.classList.contains('active')) updateDashboard(); });
-        onSnapshot(collection(db, "transactions"), snap => { transactions = []; snap.forEach(d => transactions.push({ id: d.id, ...d.data() })); loadRecentTransactions(); if (panes.dashboard.classList.contains('active')) updateDashboard(); });
-        onSnapshot(query(collection(db, "sales"), orderBy("date", "asc")), snap => { salesHistory = []; snap.forEach(d => salesHistory.push({ id: d.id, ...d.data() })); renderSalesHistory(); });
-        document.getElementById('expenseDate').valueAsDate = new Date();
-        document.getElementById('exportTransactionsCsv').onclick = exportTransactionsToCSV;
-        document.getElementById('exportSalesHistoryCsv').onclick = exportSalesHistoryToCSV;
-        document.getElementById('saveSalesHistoryBtn').onclick = saveSalesHistoryRecord;
-        document.getElementById('resetSalesHistoryFormBtn').onclick = clearSalesHistoryForm;
-        updateDashboard();
-        maybeLoadApiKey();
-    }
 </script>
 </body>
 </html>
