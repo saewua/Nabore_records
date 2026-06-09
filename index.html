@@ -4,23 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#4169E1">
-    <title>Nabore Bookshop </title>
-    <!-- Chart.js & SheetJS -->
+    <title>Nabore Bookshop · Firebase POS</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Firebase SDKs -->
-    <script type="importmap">
-        {
-            "imports": {
-                "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
-                "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
-                "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
-                "@google/generative-ai": "https://esm.run/@google/generative-ai"
-            }
-        }
-    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -150,7 +137,7 @@
         <button class="tab-btn" data-tab="saleshistory">📅 Sales History</button>
     </div>
 
-    <!-- POS Tab (products displayed from Firestore) -->
+    <!-- POS Tab -->
     <div id="posTab" class="tab-pane active">
         <div class="card"><h3>🛒 New Sale</h3>
             <div class="form-row">
@@ -223,13 +210,12 @@
 <div id="toast" class="toast">✓</div>
 
 <script type="module">
-    import { initializeApp } from "firebase/app";
-    import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, writeBatch, getDocs } from "firebase/firestore";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-    import { GoogleGenerativeAI } from "@google/generative-ai";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, orderBy, writeBatch, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
     // 🔥 REPLACE WITH YOUR FIREBASE CONFIGURATION
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCw3oFnB_jUtSLVSJ3BnyGAG8UHqY7dyQ0",
@@ -241,16 +227,17 @@ const firebaseConfig = {
   appId: "1:619207980890:web:c680907f519b3d6efa2563",
   measurementId: "G-YKNGLT2VLT"
 };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // ---------- DOM elements ----------
+    // DOM elements
     const loginDiv = document.getElementById('loginContainer');
     const mainDiv = document.getElementById('mainContent');
     const authError = document.getElementById('authErrorMsg');
 
-    // Global data stores (live from Firestore)
+    // Global data stores
     let products = [];
     let stockItems = [];
     let expenses = [];
@@ -302,45 +289,39 @@ const firebaseConfig = {
         }
     });
 
-    // ---------- FIRESTORE LISTENERS (real-time) ----------
+    // ---------- FIRESTORE LISTENERS ----------
     function initFirestoreListeners() {
-        // Products
         onSnapshot(collection(db, "products"), (snap) => {
             products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderProducts();
-            refreshProductSelect();  // update POS dropdown
+            refreshProductSelect();
         });
-        // Stock
         onSnapshot(collection(db, "stock"), (snap) => {
             stockItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderStock();
             updateDashboard();
         });
-        // Expenses
         onSnapshot(collection(db, "expenses"), (snap) => {
             expenses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderExpensesFiltered();
             updateExpenseFiltersUI();
             updateDashboard();
         });
-        // Transactions
         onSnapshot(query(collection(db, "transactions"), orderBy("date", "desc")), (snap) => {
             transactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             loadRecentTransactions();
             updateDashboard();
         });
-        // Sales History
         onSnapshot(collection(db, "salesHistory"), (snap) => {
             salesHistory = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderSalesHistory();
         });
-        // initial dashboard & filters
         updateExpenseFiltersUI();
         updateDashboard();
         document.getElementById('expenseDate').valueAsDate = new Date();
     }
 
-    // ---------- PRODUCTS (CRUD) ----------
+    // ---------- PRODUCTS ----------
     function renderProducts(filter = '') {
         const tbody = document.getElementById('productsTableBody');
         let filtered = products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
@@ -352,8 +333,8 @@ const firebaseConfig = {
                         <td>${p.type}</td>
                         <td>${formatKES(p.buyingPrice || 0)}</td>
                         <td>${formatKES(p.sellingPrice)}</td>
-                        <td><button class="editProductBtn" data-id="${p.id}">✏️</button> <button class="deleteProductBtn" data-id="${p.id}" class="btn-danger">🗑️</button></td>
-                    </tr>`;
+                        <td><button class="editProductBtn" data-id="${p.id}">✏️</button> <button class="deleteProductBtn" data-id="${p.id}" style="background:#dc2626;">🗑️</button></td>
+                     </tr>`;
         });
         tbody.innerHTML = html;
         document.querySelectorAll('.editProductBtn').forEach(btn => btn.addEventListener('click', async () => {
@@ -408,7 +389,7 @@ const firebaseConfig = {
     }
     document.getElementById('productSearch')?.addEventListener('input', e => renderProducts(e.target.value));
 
-    // ---------- STOCK (CRUD) ----------
+    // ---------- STOCK ----------
     function renderStock(filter = '') {
         let filtered = stockItems.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
         const tbody = document.getElementById('stockTableBody');
@@ -421,8 +402,8 @@ const firebaseConfig = {
                         <td class="${isLow ? 'low-stock' : ''}">${item.quantity}</td>
                         <td>${formatKES(item.price)}</td>
                         <td>${item.lowThreshold}</td>
-                        <td><button class="editStockBtn" data-id="${item.id}">✏️</button> <button class="deleteStockBtn" data-id="${item.id}" class="btn-danger">🗑️</button></td>
-                    </tr>`;
+                        <td><button class="editStockBtn" data-id="${item.id}">✏️</button> <button class="deleteStockBtn" data-id="${item.id}" style="background:#dc2626;">🗑️</button></td>
+                     </tr>`;
         });
         tbody.innerHTML = html;
         document.getElementById('lowStockList').innerHTML = lowHtml + '</ul>';
@@ -491,8 +472,8 @@ const firebaseConfig = {
                         <td>${escapeHtml(e.category)}</td>
                         <td>${formatKES(e.amount)}</td>
                         <td>${escapeHtml(e.description || '')}</td>
-                        <td><button class="deleteExpenseBtn" data-id="${e.id}" class="btn-danger">🗑️</button></td>
-                    </tr>`;
+                        <td><button class="deleteExpenseBtn" data-id="${e.id}" style="background:#dc2626;">🗑️</button></td>
+                     </tr>`;
         });
         tbody.innerHTML = html;
         document.querySelectorAll('.deleteExpenseBtn').forEach(btn => btn.addEventListener('click', async () => {
@@ -530,7 +511,7 @@ const firebaseConfig = {
         const blob = new Blob([csv]); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Expenses_${Date.now()}.csv`; a.click();
     };
 
-    // ---------- POS (Firestore products in dropdown) ----------
+    // ---------- POS (with fixed completeSale) ----------
     function refreshProductSelect() {
         const select = document.getElementById('posProductSelect');
         select.innerHTML = '<option value="">-- Select product/service --</option>';
@@ -586,50 +567,102 @@ const firebaseConfig = {
     }
     document.getElementById('addToCartBtn').onclick = addToCart;
     document.getElementById('clearCartBtn').onclick = () => { cart = []; renderCart(); };
+
+    // FIXED: Complete Sale with proper error handling and batch commit
     async function completeSale() {
-        if (cart.length === 0) return alert('Cart empty');
-        const client = document.getElementById('clientNumber').value.trim();
-        if (!client) return alert('Client required');
-        const payment = document.getElementById('paymentMethod').value;
-        const total = cart.reduce((s, i) => s + i.total, 0);
-        const receiptNo = `NB-${Date.now()}`;
-        // Validate stock before batch
-        for (const item of cart) {
-            const stockItem = stockItems.find(s => s.name.toLowerCase() === item.name.toLowerCase());
-            if (stockItem && stockItem.quantity < item.qty) return alert(`Insufficient stock: ${item.name}`);
+        if (cart.length === 0) {
+            alert('Cart is empty');
+            return;
         }
-        const batch = writeBatch(db);
-        // Update stock quantities
+        const client = document.getElementById('clientNumber').value.trim();
+        if (!client) {
+            alert('Client phone/ID is required');
+            return;
+        }
+        const payment = document.getElementById('paymentMethod').value;
+        const total = cart.reduce((sum, item) => sum + item.total, 0);
+        const receiptNo = `NB-${Date.now()}`;
+
+        // Validate stock sufficiency
         for (const item of cart) {
-            const stockItem = stockItems.find(s => s.name.toLowerCase() === item.name.toLowerCase());
-            if (stockItem) {
-                const newQty = stockItem.quantity - item.qty;
-                batch.update(doc(db, "stock", stockItem.id), { quantity: newQty });
+            if (item.type === 'Product') {
+                const stockItem = stockItems.find(s => s.name.toLowerCase() === item.name.toLowerCase());
+                if (!stockItem) {
+                    alert(`Stock record not found for ${item.name}`);
+                    return;
+                }
+                if (stockItem.quantity < item.qty) {
+                    alert(`Insufficient stock for ${item.name}. Available: ${stockItem.quantity}`);
+                    return;
+                }
             }
         }
-        // Add transaction
+
+        const batch = writeBatch(db);
+        // Deduct stock
+        for (const item of cart) {
+            if (item.type === 'Product') {
+                const stockItem = stockItems.find(s => s.name.toLowerCase() === item.name.toLowerCase());
+                if (stockItem) {
+                    const newQty = stockItem.quantity - item.qty;
+                    batch.update(doc(db, "stock", stockItem.id), { quantity: newQty });
+                }
+            }
+        }
+        // Add transaction document
         const transRef = doc(collection(db, "transactions"));
         batch.set(transRef, {
-            receiptNo, clientNumber: client, paymentMethod: payment,
-            items: cart.map(i => ({ name: i.name, qty: i.qty, sellingPrice: i.sellingPrice, buyingPrice: i.buyingPrice, type: i.type, total: i.total })),
-            total, date: new Date().toISOString(), userId: auth.currentUser?.uid
+            receiptNo,
+            clientNumber: client,
+            paymentMethod: payment,
+            items: cart.map(i => ({
+                name: i.name,
+                qty: i.qty,
+                sellingPrice: i.sellingPrice,
+                buyingPrice: i.buyingPrice,
+                type: i.type,
+                total: i.total
+            })),
+            total,
+            date: new Date().toISOString(),
+            userId: auth.currentUser?.uid || 'anonymous'
         });
-        await batch.commit();
-        printReceipt({ receiptNo, clientNumber: client, paymentMethod: payment, items: cart, total, date: new Date() });
-        cart = [];
-        renderCart();
-        document.getElementById('clientNumber').value = '';
-        showToast('Sale completed & stock updated');
+
+        try {
+            await batch.commit();
+            // Print receipt
+            printReceipt({
+                receiptNo,
+                clientNumber: client,
+                paymentMethod: payment,
+                items: cart,
+                total,
+                date: new Date()
+            });
+            // Clear cart and form
+            cart = [];
+            renderCart();
+            document.getElementById('clientNumber').value = '';
+            showToast('✅ Sale completed successfully!');
+        } catch (error) {
+            console.error('Sale error:', error);
+            alert('Failed to complete sale: ' + error.message);
+        }
     }
+
     function printReceipt(sale) {
         const win = window.open('', '_blank');
         let itemsHtml = '';
-        sale.items.forEach(i => { itemsHtml += `<tr><td>${escapeHtml(i.name)}</td><td>${i.qty}</td><td>${formatKES(i.sellingPrice)}</td><td>${formatKES(i.total)}</td></tr>`; });
+        sale.items.forEach(i => {
+            itemsHtml += `<tr><td>${escapeHtml(i.name)}</td><td>${i.qty}</td><td>${formatKES(i.sellingPrice)}</td><td>${formatKES(i.total)}</td></tr>`;
+        });
         win.document.write(`<!DOCTYPE html><html><head><title>Receipt ${sale.receiptNo}</title><style>body{font-family:Inter;padding:1rem;}</style></head><body><div><h2>Nabore Bookshop</h2><hr><p>#${sale.receiptNo}</p><p>${new Date(sale.date).toLocaleString()}</p><p>Client: ${escapeHtml(sale.clientNumber)}</p><p>Payment: ${sale.paymentMethod}</p><table border="1" cellpadding="4">${itemsHtml}</table><h3>Total: ${formatKES(sale.total)}</h3><p>Thank you!</p></div></body></html>`);
         win.document.close();
         win.print();
     }
+
     document.getElementById('completeSaleBtn').onclick = completeSale;
+
     function loadRecentTransactions() {
         const tbody = document.getElementById('transactionsBody');
         if (!transactions.length) { tbody.innerHTML = '<tr><td colspan="6">No transactions</td></tr>'; return; }
@@ -642,7 +675,7 @@ const firebaseConfig = {
                         <td>${t.items.length} items</td>
                         <td>${formatKES(t.total)}</td>
                         <td><button class="reprintBtn" data-receipt='${JSON.stringify(t)}'>🖨️</button></td>
-                    </tr>`;
+                     </tr>`;
         });
         tbody.innerHTML = html;
         document.querySelectorAll('.reprintBtn').forEach(btn => btn.addEventListener('click', () => {
@@ -722,8 +755,8 @@ const firebaseConfig = {
                         <td>${formatKES(e)}</td>
                         <td>${formatKES(net)}</td>
                         <td>${rec.image ? `<img src="${rec.image}" style="width:40px; border-radius:8px;">` : '—'}</td>
-                        <td><button class="editSalesBtn" data-date="${rec.date}">✏️</button> <button class="delSalesBtn" data-date="${rec.date}" class="btn-danger">🗑️</button></td>
-                    </tr>`;
+                        <td><button class="editSalesBtn" data-date="${rec.date}">✏️</button> <button class="delSalesBtn" data-date="${rec.date}" style="background:#dc2626;">🗑️</button></td>
+                     </tr>`;
         });
         tbody.innerHTML = html;
         document.getElementById('salesHistoryTotalServices').innerHTML = formatKES(totalSer);
